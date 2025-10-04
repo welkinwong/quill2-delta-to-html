@@ -1,8 +1,5 @@
 // Copied from mdn's Object.assign
-function assign(
-  target: any,
-  ...sources: any[] /*, one or more source objects */
-) {
+function assign(target: any, ...sources: any[] /*, one or more source objects */) {
   // TypeError if undefined or null
   if (target == null) {
     throw new TypeError('Cannot convert undefined or null to object');

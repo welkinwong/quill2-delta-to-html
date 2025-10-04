@@ -1,10 +1,4 @@
-import {
-  TDataGroup,
-  TableGroup,
-  BlockGroup,
-  TableRow,
-  TableCell,
-} from './group-types';
+import { TDataGroup, TableGroup, BlockGroup, TableRow, TableCell } from './group-types';
 import { groupConsecutiveElementsWhile } from '../helpers/array';
 
 export class TableGrouper {
@@ -13,20 +7,10 @@ export class TableGrouper {
     return tableBlocked;
   }
 
-  private convertTableBlocksToTableGroups(
-    items: TDataGroup[]
-  ): Array<TDataGroup> {
-    var grouped = groupConsecutiveElementsWhile(
-      items,
-      (g: TDataGroup, gPrev: TDataGroup) => {
-        return (
-          g instanceof BlockGroup &&
-          gPrev instanceof BlockGroup &&
-          g.op.isTable() &&
-          gPrev.op.isTable()
-        );
-      }
-    );
+  private convertTableBlocksToTableGroups(items: TDataGroup[]): Array<TDataGroup> {
+    var grouped = groupConsecutiveElementsWhile(items, (g: TDataGroup, gPrev: TDataGroup) => {
+      return g instanceof BlockGroup && gPrev instanceof BlockGroup && g.op.isTable() && gPrev.op.isTable();
+    });
 
     return grouped.map((item: TDataGroup | BlockGroup[]) => {
       if (!Array.isArray(item)) {
@@ -40,24 +24,17 @@ export class TableGrouper {
   }
 
   private convertTableBlocksToTableRows(items: TDataGroup[]): TableRow[] {
-    var grouped = groupConsecutiveElementsWhile(
-      items,
-      (g: TDataGroup, gPrev: TDataGroup) => {
-        return (
-          g instanceof BlockGroup &&
-          gPrev instanceof BlockGroup &&
-          g.op.isTable() &&
-          gPrev.op.isTable() &&
-          g.op.isSameTableRowAs(gPrev.op)
-        );
-      }
-    );
-    return grouped.map((item: BlockGroup | BlockGroup[]) => {
-      return new TableRow(
-        Array.isArray(item)
-          ? item.map((it) => new TableCell(it))
-          : [new TableCell(item)]
+    var grouped = groupConsecutiveElementsWhile(items, (g: TDataGroup, gPrev: TDataGroup) => {
+      return (
+        g instanceof BlockGroup &&
+        gPrev instanceof BlockGroup &&
+        g.op.isTable() &&
+        gPrev.op.isTable() &&
+        g.op.isSameTableRowAs(gPrev.op)
       );
+    });
+    return grouped.map((item: BlockGroup | BlockGroup[]) => {
+      return new TableRow(Array.isArray(item) ? item.map(it => new TableCell(it)) : [new TableCell(item)]);
     });
   }
 }

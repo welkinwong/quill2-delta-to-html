@@ -9,10 +9,7 @@ var Grouper = (function () {
     Grouper.pairOpsWithTheirBlock = function (ops) {
         var result = [];
         var canBeInBlock = function (op) {
-            return !(op.isJustNewline() ||
-                op.isCustomEmbedBlock() ||
-                op.isVideo() ||
-                op.isContainerBlock());
+            return !(op.isJustNewline() || op.isCustomEmbedBlock() || op.isVideo() || op.isContainerBlock());
         };
         var isInlineData = function (op) { return op.isInline(); };
         var lastInd = ops.length - 1;
@@ -39,27 +36,6 @@ var Grouper = (function () {
         result.reverse();
         return result;
     };
-    Grouper.groupConsecutiveSameStyleBlocks = function (groups, blocksOf) {
-        if (blocksOf === void 0) { blocksOf = {
-            header: true,
-            codeBlocks: true,
-            blockquotes: true,
-            customBlocks: true,
-        }; }
-        return array_1.groupConsecutiveElementsWhile(groups, function (g, gPrev) {
-            if (!(g instanceof group_types_1.BlockGroup) || !(gPrev instanceof group_types_1.BlockGroup)) {
-                return false;
-            }
-            return ((blocksOf.codeBlocks &&
-                Grouper.areBothCodeblocksWithSameLang(g, gPrev)) ||
-                (blocksOf.blockquotes &&
-                    Grouper.areBothBlockquotesWithSameAdi(g, gPrev)) ||
-                (blocksOf.header &&
-                    Grouper.areBothSameHeadersWithSameAdi(g, gPrev)) ||
-                (blocksOf.customBlocks &&
-                    Grouper.areBothCustomBlockWithSameAttr(g, gPrev)));
-        });
-    };
     Grouper.reduceConsecutiveSameStyleBlocksToOne = function (groups) {
         var newLineOp = DeltaInsertOp_1.DeltaInsertOp.createNewLineOp();
         return groups.map(function (elm) {
@@ -80,22 +56,16 @@ var Grouper = (function () {
         });
     };
     Grouper.areBothCodeblocksWithSameLang = function (g1, gOther) {
-        return (g1.op.isCodeBlock() &&
-            gOther.op.isCodeBlock() &&
-            g1.op.hasSameLangAs(gOther.op));
+        return g1.op.isCodeBlock() && gOther.op.isCodeBlock() && g1.op.hasSameLangAs(gOther.op);
     };
     Grouper.areBothSameHeadersWithSameAdi = function (g1, gOther) {
         return g1.op.isSameHeaderAs(gOther.op) && g1.op.hasSameAdiAs(gOther.op);
     };
     Grouper.areBothBlockquotesWithSameAdi = function (g, gOther) {
-        return (g.op.isBlockquote() &&
-            gOther.op.isBlockquote() &&
-            g.op.hasSameAdiAs(gOther.op));
+        return g.op.isBlockquote() && gOther.op.isBlockquote() && g.op.hasSameAdiAs(gOther.op);
     };
     Grouper.areBothCustomBlockWithSameAttr = function (g, gOther) {
-        return (g.op.isCustomTextBlock() &&
-            gOther.op.isCustomTextBlock() &&
-            g.op.hasSameAttr(gOther.op));
+        return g.op.isCustomTextBlock() && gOther.op.isCustomTextBlock() && g.op.hasSameAttr(gOther.op);
     };
     return Grouper;
 }());

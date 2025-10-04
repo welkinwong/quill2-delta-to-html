@@ -41,6 +41,7 @@ var GroupType;
 (function (GroupType) {
     GroupType["Block"] = "block";
     GroupType["InlineGroup"] = "inline-group";
+    GroupType["CodeBlock"] = "code-block";
     GroupType["List"] = "list";
     GroupType["Video"] = "video";
     GroupType["Table"] = "table";

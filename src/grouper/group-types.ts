@@ -25,6 +25,20 @@ class BlockGroup {
   }
 }
 
+class CodeBlockGroup {
+  items: CodeBlockItem[];
+  constructor(items: CodeBlockItem[]) {
+    this.items = items;
+  }
+}
+
+class CodeBlockItem {
+  readonly item: BlockGroup;
+  constructor(item: BlockGroup) {
+    this.item = item;
+  }
+}
+
 class ListGroup {
   items: ListItem[];
   constructor(items: ListItem[]) {
@@ -34,10 +48,8 @@ class ListGroup {
 
 class ListItem {
   readonly item: BlockGroup;
-  innerList: ListGroup | null;
-  constructor(item: BlockGroup, innerList: ListGroup | null = null) {
+  constructor(item: BlockGroup) {
     this.item = item;
-    this.innerList = innerList;
   }
 }
 
@@ -66,6 +78,8 @@ type TDataGroup =
   | VideoItem
   | InlineGroup
   | BlockGroup
+  | CodeBlockGroup
+  | CodeBlockItem
   | ListItem
   | ListGroup
   | TableGroup
@@ -77,6 +91,8 @@ export {
   BlotBlock,
   InlineGroup,
   BlockGroup,
+  CodeBlockGroup,
+  CodeBlockItem,
   ListGroup,
   ListItem,
   TableGroup,

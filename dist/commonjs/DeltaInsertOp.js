@@ -47,20 +47,14 @@ var DeltaInsertOp = (function () {
             this.attributes.direction === op.attributes.direction &&
             this.attributes.indent === op.attributes.indent);
     };
-    DeltaInsertOp.prototype.hasSameIndentationAs = function (op) {
-        return this.attributes.indent === op.attributes.indent;
-    };
     DeltaInsertOp.prototype.hasSameAttr = function (op) {
         return lodash_isequal_1.default(this.attributes, op.attributes);
     };
     DeltaInsertOp.prototype.hasHigherIndentThan = function (op) {
-        return ((Number(this.attributes.indent) || 0) >
-            (Number(op.attributes.indent) || 0));
+        return (Number(this.attributes.indent) || 0) > (Number(op.attributes.indent) || 0);
     };
     DeltaInsertOp.prototype.isInline = function () {
-        return !(this.isContainerBlock() ||
-            this.isVideo() ||
-            this.isCustomEmbedBlock());
+        return !(this.isContainerBlock() || this.isVideo() || this.isCustomEmbedBlock());
     };
     DeltaInsertOp.prototype.isCodeBlock = function () {
         return !!this.attributes['code-block'];
@@ -72,10 +66,7 @@ var DeltaInsertOp = (function () {
         return this.insert.value === value_types_1.NewLine;
     };
     DeltaInsertOp.prototype.isList = function () {
-        return (this.isOrderedList() ||
-            this.isBulletList() ||
-            this.isCheckedList() ||
-            this.isUncheckedList());
+        return this.isOrderedList() || this.isBulletList() || this.isCheckedList() || this.isUncheckedList();
     };
     DeltaInsertOp.prototype.isOrderedList = function () {
         return this.attributes.list === value_types_1.ListType.Ordered;
@@ -90,18 +81,18 @@ var DeltaInsertOp = (function () {
         return this.attributes.list === value_types_1.ListType.Unchecked;
     };
     DeltaInsertOp.prototype.isACheckList = function () {
-        return (this.attributes.list == value_types_1.ListType.Unchecked ||
-            this.attributes.list === value_types_1.ListType.Checked);
+        return this.attributes.list == value_types_1.ListType.Unchecked || this.attributes.list === value_types_1.ListType.Checked;
+    };
+    DeltaInsertOp.prototype.isSameCodeBlockAs = function (op) {
+        return (!!this.attributes['code-block'] &&
+            (this.attributes['code-block'] === op.attributes['code-block'] || (this.isCodeBlock() && op.isCodeBlock())));
     };
     DeltaInsertOp.prototype.isSameListAs = function (op) {
         return (!!op.attributes.list &&
-            (this.attributes.list === op.attributes.list ||
-                (op.isACheckList() && this.isACheckList())));
+            (this.attributes.list === op.attributes.list || (op.isACheckList() && this.isACheckList())));
     };
     DeltaInsertOp.prototype.isSameTableRowAs = function (op) {
-        return (!!op.isTable() &&
-            this.isTable() &&
-            this.attributes.table === op.attributes.table);
+        return !!op.isTable() && this.isTable() && this.attributes.table === op.attributes.table;
     };
     DeltaInsertOp.prototype.isText = function () {
         return this.insert.type === value_types_1.DataType.Text;

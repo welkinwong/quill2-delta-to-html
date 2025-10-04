@@ -47,25 +47,13 @@ interface IOpAttributeSanitizerOptions {
 }
 
 class OpAttributeSanitizer {
-  static sanitize(
-    dirtyAttrs: IOpAttributes,
-    sanitizeOptions: IOpAttributeSanitizerOptions
-  ): IOpAttributes {
+  static sanitize(dirtyAttrs: IOpAttributes, sanitizeOptions: IOpAttributeSanitizerOptions): IOpAttributes {
     var cleanAttrs: any = {};
 
     if (!dirtyAttrs || typeof dirtyAttrs !== 'object') {
       return cleanAttrs;
     }
-    let booleanAttrs = [
-      'bold',
-      'italic',
-      'underline',
-      'strike',
-      'code',
-      'blockquote',
-      'code-block',
-      'renderAsBlock',
-    ];
+    let booleanAttrs = ['bold', 'italic', 'underline', 'strike', 'code', 'blockquote', 'code-block', 'renderAsBlock'];
 
     let colorAttrs = ['background', 'color'];
 
@@ -173,12 +161,7 @@ class OpAttributeSanitizer {
       cleanAttrs.header = Math.min(Number(header), 6);
     }
 
-    if (
-      find(
-        [AlignType.Center, AlignType.Right, AlignType.Justify, AlignType.Left],
-        (a) => a === align
-      )
-    ) {
+    if (find([AlignType.Center, AlignType.Right, AlignType.Justify, AlignType.Left], a => a === align)) {
       cleanAttrs.align = align;
     }
 
@@ -191,10 +174,7 @@ class OpAttributeSanitizer {
     }
 
     if (mentions && mention) {
-      let sanitizedMention = MentionSanitizer.sanitize(
-        mention,
-        sanitizeOptions
-      );
+      let sanitizedMention = MentionSanitizer.sanitize(mention, sanitizeOptions);
       if (Object.keys(sanitizedMention).length > 0) {
         cleanAttrs.mentions = !!mentions;
         cleanAttrs.mention = mention;
@@ -250,9 +230,4 @@ class OpAttributeSanitizer {
   }
 }
 
-export {
-  OpAttributeSanitizer,
-  IOpAttributes,
-  IOpAttributeSanitizerOptions,
-  IUrlSanitizerFn,
-};
+export { OpAttributeSanitizer, IOpAttributes, IOpAttributeSanitizerOptions, IUrlSanitizerFn };

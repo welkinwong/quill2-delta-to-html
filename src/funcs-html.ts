@@ -8,10 +8,7 @@ enum EncodeTarget {
   Url = 1,
 }
 
-function makeStartTag(
-  tag: any,
-  attrs: ITagKeyValue | ITagKeyValue[] | undefined = undefined
-) {
+function makeStartTag(tag: any, attrs: ITagKeyValue | ITagKeyValue[] | undefined = undefined) {
   if (!tag) {
     return '';
   }
@@ -66,9 +63,7 @@ function encodeMappings(mtype: EncodeTarget) {
     ['\\)', '&#41;'],
   ];
   if (mtype === EncodeTarget.Html) {
-    return maps.filter(
-      ([v, _]) => v.indexOf('(') === -1 && v.indexOf(')') === -1
-    );
+    return maps.filter(([v, _]) => v.indexOf('(') === -1 && v.indexOf(')') === -1);
   } else {
     // for url
     return maps.filter(([v, _]) => v.indexOf('/') === -1);
@@ -80,11 +75,4 @@ function encodeMapping(str: string, mapping: string[]) {
 function decodeMapping(str: string, mapping: string[]) {
   return str.replace(new RegExp(mapping[1], 'g'), mapping[0].replace('\\', ''));
 }
-export {
-  makeStartTag,
-  makeEndTag,
-  encodeHtml,
-  decodeHtml,
-  encodeLink,
-  ITagKeyValue,
-};
+export { makeStartTag, makeEndTag, encodeHtml, decodeHtml, encodeLink, ITagKeyValue };

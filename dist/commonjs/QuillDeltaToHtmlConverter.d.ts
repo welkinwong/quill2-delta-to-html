@@ -7,19 +7,16 @@ import {
   TableGroup,
   TableRow,
   TableCell,
+  CodeBlockGroup,
+  CodeBlockItem,
 } from './grouper/group-types';
 import { GroupType } from './value-types';
 import { IOpAttributeSanitizerOptions } from './OpAttributeSanitizer';
-interface IQuillDeltaToHtmlConverterOptions
-  extends IOpAttributeSanitizerOptions,
-    IOpToHtmlConverterOptions {
+interface IQuillDeltaToHtmlConverterOptions extends IOpAttributeSanitizerOptions, IOpToHtmlConverterOptions {
   orderedListTag?: string;
   bulletListTag?: string;
-  multiLineBlockquote?: boolean;
-  multiLineHeader?: boolean;
-  multiLineCodeblock?: boolean;
-  multiLineParagraph?: boolean;
-  multiLineCustomBlock?: boolean;
+  simpleCodeBlock?: boolean;
+  simpleList?: boolean;
 }
 declare class QuillDeltaToHtmlConverter {
   private options;
@@ -30,11 +27,9 @@ declare class QuillDeltaToHtmlConverter {
   _getListTag(op: DeltaInsertOp): string;
   getGroupedOps(): TDataGroup[];
   convert(): string;
-  _renderWithCallbacks(
-    groupType: GroupType,
-    group: TDataGroup,
-    myRenderFn: () => string
-  ): string;
+  _renderWithCallbacks(groupType: GroupType, group: TDataGroup, myRenderFn: () => string): string;
+  _renderCodeBlock(codeBlockGroup: CodeBlockGroup): string;
+  _renderCodeBlockItem(codeBlock: CodeBlockItem, isLast: boolean): string;
   _renderList(list: ListGroup): string;
   _renderListItem(li: ListItem): string;
   _renderTable(table: TableGroup): string;
@@ -46,8 +41,6 @@ declare class QuillDeltaToHtmlConverter {
   _renderCustom(op: DeltaInsertOp, contextOp: DeltaInsertOp | null): any;
   beforeRender(cb: (group: GroupType, data: TDataGroup) => string): void;
   afterRender(cb: (group: GroupType, html: string) => string): void;
-  renderCustomWith(
-    cb: (op: DeltaInsertOp, contextOp: DeltaInsertOp) => string
-  ): void;
+  renderCustomWith(cb: (op: DeltaInsertOp, contextOp: DeltaInsertOp) => string): void;
 }
 export { QuillDeltaToHtmlConverter };

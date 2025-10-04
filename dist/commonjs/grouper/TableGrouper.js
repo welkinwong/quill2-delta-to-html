@@ -12,10 +12,7 @@ var TableGrouper = (function () {
     TableGrouper.prototype.convertTableBlocksToTableGroups = function (items) {
         var _this = this;
         var grouped = array_1.groupConsecutiveElementsWhile(items, function (g, gPrev) {
-            return (g instanceof group_types_1.BlockGroup &&
-                gPrev instanceof group_types_1.BlockGroup &&
-                g.op.isTable() &&
-                gPrev.op.isTable());
+            return g instanceof group_types_1.BlockGroup && gPrev instanceof group_types_1.BlockGroup && g.op.isTable() && gPrev.op.isTable();
         });
         return grouped.map(function (item) {
             if (!Array.isArray(item)) {
@@ -36,9 +33,7 @@ var TableGrouper = (function () {
                 g.op.isSameTableRowAs(gPrev.op));
         });
         return grouped.map(function (item) {
-            return new group_types_1.TableRow(Array.isArray(item)
-                ? item.map(function (it) { return new group_types_1.TableCell(it); })
-                : [new group_types_1.TableCell(item)]);
+            return new group_types_1.TableRow(Array.isArray(item) ? item.map(function (it) { return new group_types_1.TableCell(it); }) : [new group_types_1.TableCell(item)]);
         });
     };
     return TableGrouper;

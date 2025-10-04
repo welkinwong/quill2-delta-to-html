@@ -14,14 +14,21 @@ declare class BlockGroup {
   ops: DeltaInsertOp[];
   constructor(op: DeltaInsertOp, ops: DeltaInsertOp[]);
 }
+declare class CodeBlockGroup {
+  items: CodeBlockItem[];
+  constructor(items: CodeBlockItem[]);
+}
+declare class CodeBlockItem {
+  readonly item: BlockGroup;
+  constructor(item: BlockGroup);
+}
 declare class ListGroup {
   items: ListItem[];
   constructor(items: ListItem[]);
 }
 declare class ListItem {
   readonly item: BlockGroup;
-  innerList: ListGroup | null;
-  constructor(item: BlockGroup, innerList?: ListGroup | null);
+  constructor(item: BlockGroup);
 }
 declare class TableGroup {
   rows: TableRow[];
@@ -39,6 +46,8 @@ declare type TDataGroup =
   | VideoItem
   | InlineGroup
   | BlockGroup
+  | CodeBlockGroup
+  | CodeBlockItem
   | ListItem
   | ListGroup
   | TableGroup
@@ -49,6 +58,8 @@ export {
   BlotBlock,
   InlineGroup,
   BlockGroup,
+  CodeBlockGroup,
+  CodeBlockItem,
   ListGroup,
   ListItem,
   TableGroup,

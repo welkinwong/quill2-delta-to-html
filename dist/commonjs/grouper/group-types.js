@@ -47,6 +47,20 @@ var BlockGroup = (function () {
     return BlockGroup;
 }());
 exports.BlockGroup = BlockGroup;
+var CodeBlockGroup = (function () {
+    function CodeBlockGroup(items) {
+        this.items = items;
+    }
+    return CodeBlockGroup;
+}());
+exports.CodeBlockGroup = CodeBlockGroup;
+var CodeBlockItem = (function () {
+    function CodeBlockItem(item) {
+        this.item = item;
+    }
+    return CodeBlockItem;
+}());
+exports.CodeBlockItem = CodeBlockItem;
 var ListGroup = (function () {
     function ListGroup(items) {
         this.items = items;
@@ -55,10 +69,8 @@ var ListGroup = (function () {
 }());
 exports.ListGroup = ListGroup;
 var ListItem = (function () {
-    function ListItem(item, innerList) {
-        if (innerList === void 0) { innerList = null; }
+    function ListItem(item) {
         this.item = item;
-        this.innerList = innerList;
     }
     return ListItem;
 }());

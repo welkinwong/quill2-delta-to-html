@@ -30,7 +30,7 @@ exports.DEFAULT_INLINE_STYLES = {
     },
     direction: function (value, op) {
         if (value === 'rtl') {
-            return ('direction:rtl' + (op.attributes['align'] ? '' : '; text-align:inherit'));
+            return 'direction:rtl' + (op.attributes['align'] ? '' : '; text-align:inherit');
         }
         else {
             return undefined;
@@ -69,9 +69,7 @@ var OpToHtmlConverter = (function () {
         }
         var beginTags = [], endTags = [];
         var imgTag = 'img';
-        var isImageLink = function (tag) {
-            return tag === imgTag && !!_this.op.attributes.link;
-        };
+        var isImageLink = function (tag) { return tag === imgTag && !!_this.op.attributes.link; };
         for (var _i = 0, tags_1 = tags; _i < tags_1.length; _i++) {
             var tag = tags_1[_i];
             if (isImageLink(tag)) {
@@ -112,11 +110,7 @@ var OpToHtmlConverter = (function () {
         }
         return (this.getCustomCssClasses() || []).concat(propsArr
             .filter(function (prop) { return !!attrs[prop]; })
-            .filter(function (prop) {
-            return prop === 'background'
-                ? OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidColorLiteral(attrs[prop])
-                : true;
-        })
+            .filter(function (prop) { return (prop === 'background' ? OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidColorLiteral(attrs[prop]) : true); })
             .map(function (prop) { return prop + '-' + attrs[prop]; })
             .concat(this.op.isFormula() ? 'formula' : [])
             .concat(this.op.isVideo() ? 'video' : [])
@@ -145,8 +139,7 @@ var OpToHtmlConverter = (function () {
             .map(function (item) {
             var attribute = item[0];
             var attrValue = attrs[attribute];
-            var attributeConverter = (_this.options.inlineStyles &&
-                _this.options.inlineStyles[attribute]) ||
+            var attributeConverter = (_this.options.inlineStyles && _this.options.inlineStyles[attribute]) ||
                 exports.DEFAULT_INLINE_STYLES[attribute];
             if (typeof attributeConverter === 'object') {
                 return attributeConverter[attrValue];
@@ -168,18 +161,16 @@ var OpToHtmlConverter = (function () {
         var makeAttr = this.makeAttr.bind(this);
         var customTagAttributes = this.getCustomTagAttributes();
         var customAttr = customTagAttributes
-            ? Object.keys(this.getCustomTagAttributes()).map(function (k) {
-                return makeAttr(k, customTagAttributes[k]);
-            })
+            ? Object.keys(this.getCustomTagAttributes()).map(function (k) { return makeAttr(k, customTagAttributes[k]); })
             : [];
         var classes = this.getCssClasses();
-        var tagAttrs = classes.length
-            ? customAttr.concat([makeAttr('class', classes.join(' '))])
-            : customAttr;
+        var tagAttrs = classes.length ? customAttr.concat([makeAttr('class', classes.join(' '))]) : customAttr;
         if (this.op.isImage()) {
-            this.op.attributes.width &&
-                (tagAttrs = tagAttrs.concat(makeAttr('width', this.op.attributes.width)));
+            this.op.attributes.width && (tagAttrs = tagAttrs.concat(makeAttr('width', this.op.attributes.width)));
             return tagAttrs.concat(makeAttr('src', this.op.insert.value));
+        }
+        if (this.op.isList() && !this.options.simpleList) {
+            return tagAttrs.concat(makeAttr('data-list', this.op.attributes.list));
         }
         if (this.op.isACheckList()) {
             return tagAttrs.concat(makeAttr('data-checked', this.op.isCheckedList() ? 'true' : 'false'));
@@ -210,9 +201,16 @@ var OpToHtmlConverter = (function () {
         if (styles.length) {
             tagAttrs.push(makeAttr('style', styles.join(';')));
         }
-        if (this.op.isCodeBlock() &&
-            typeof this.op.attributes['code-block'] === 'string') {
-            return tagAttrs.concat(makeAttr('data-language', this.op.attributes['code-block']));
+        if (this.op.isCodeBlock()) {
+            if (!this.options.simpleCodeBlock) {
+                tagAttrs = tagAttrs.concat(makeAttr('class', this.prefixClass('code-block')));
+            }
+            if (typeof this.op.attributes['code-block'] === 'string') {
+                return tagAttrs.concat(makeAttr('data-language', this.op.attributes['code-block']));
+            }
+            else {
+                return tagAttrs;
+            }
         }
         if (this.op.isContainerBlock()) {
             return tagAttrs;
@@ -230,9 +228,7 @@ var OpToHtmlConverter = (function () {
         var targetForAll = OpAttributeSanitizer_1.OpAttributeSanitizer.isValidTarget(this.options.linkTarget || '')
             ? this.options.linkTarget
             : undefined;
-        var relForAll = OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidRel(this.options.linkRel || '')
-            ? this.options.linkRel
-            : undefined;
+        var relForAll = OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidRel(this.options.linkRel || '') ? this.options.linkRel : undefined;
         var target = this.op.attributes.target || targetForAll;
         var rel = this.op.attributes.rel || relForAll;
         return tagAttrs
@@ -241,20 +237,17 @@ var OpToHtmlConverter = (function () {
             .concat(rel ? this.makeAttr('rel', rel) : []);
     };
     OpToHtmlConverter.prototype.getCustomTag = function (format) {
-        if (this.options.customTag &&
-            typeof this.options.customTag === 'function') {
+        if (this.options.customTag && typeof this.options.customTag === 'function') {
             return this.options.customTag.apply(null, [format, this.op]);
         }
     };
     OpToHtmlConverter.prototype.getCustomTagAttributes = function () {
-        if (this.options.customTagAttributes &&
-            typeof this.options.customTagAttributes === 'function') {
+        if (this.options.customTagAttributes && typeof this.options.customTagAttributes === 'function') {
             return this.options.customTagAttributes.apply(null, [this.op]);
         }
     };
     OpToHtmlConverter.prototype.getCustomCssClasses = function () {
-        if (this.options.customCssClasses &&
-            typeof this.options.customCssClasses === 'function') {
+        if (this.options.customCssClasses && typeof this.options.customCssClasses === 'function') {
             var res = this.options.customCssClasses.apply(null, [this.op]);
             if (res) {
                 return Array.isArray(res) ? res : [res];
@@ -262,8 +255,7 @@ var OpToHtmlConverter = (function () {
         }
     };
     OpToHtmlConverter.prototype.getCustomCssStyles = function () {
-        if (this.options.customCssStyles &&
-            typeof this.options.customCssStyles === 'function') {
+        if (this.options.customCssStyles && typeof this.options.customCssStyles === 'function') {
             var res = this.options.customCssStyles.apply(null, [this.op]);
             if (res) {
                 return Array.isArray(res) ? res : [res];
@@ -281,7 +273,6 @@ var OpToHtmlConverter = (function () {
         var positionTag = this.options.paragraphTag || 'p';
         var blocks = [
             ['blockquote'],
-            ['code-block', 'pre'],
             ['list', this.options.listItemTag],
             ['header'],
             ['align', positionTag],
@@ -293,11 +284,7 @@ var OpToHtmlConverter = (function () {
             var firstItem = item[0];
             if (attrs[firstItem]) {
                 var customTag = this.getCustomTag(firstItem);
-                return customTag
-                    ? [customTag]
-                    : firstItem === 'header'
-                        ? ['h' + attrs[firstItem]]
-                        : [arr.preferSecond(item)];
+                return customTag ? [customTag] : firstItem === 'header' ? ['h' + attrs[firstItem]] : [arr.preferSecond(item)];
             }
         }
         if (this.op.isCustomTextBlock()) {

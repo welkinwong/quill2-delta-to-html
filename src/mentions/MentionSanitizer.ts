@@ -13,10 +13,7 @@ interface IMention {
 }
 
 class MentionSanitizer {
-  static sanitize(
-    dirtyObj: IMention,
-    sanitizeOptions: IOpAttributeSanitizerOptions
-  ): IMention {
+  static sanitize(dirtyObj: IMention, sanitizeOptions: IOpAttributeSanitizerOptions): IMention {
     var cleanObj: any = {};
 
     if (!dirtyObj || typeof dirtyObj !== 'object') {
@@ -36,17 +33,11 @@ class MentionSanitizer {
     }
 
     if (dirtyObj.avatar) {
-      cleanObj.avatar = OpLinkSanitizer.sanitize(
-        dirtyObj.avatar + '',
-        sanitizeOptions
-      );
+      cleanObj.avatar = OpLinkSanitizer.sanitize(dirtyObj.avatar + '', sanitizeOptions);
     }
 
     if (dirtyObj['end-point']) {
-      cleanObj['end-point'] = OpLinkSanitizer.sanitize(
-        dirtyObj['end-point'] + '',
-        sanitizeOptions
-      );
+      cleanObj['end-point'] = OpLinkSanitizer.sanitize(dirtyObj['end-point'] + '', sanitizeOptions);
     }
 
     if (dirtyObj.slug) {

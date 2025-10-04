@@ -1,29 +1,13 @@
 import { DeltaInsertOp } from './../DeltaInsertOp';
-import {
-  IArraySlice,
-  flatten,
-  groupConsecutiveElementsWhile,
-  sliceFromReverseWhile,
-} from './../helpers/array';
-import {
-  VideoItem,
-  InlineGroup,
-  BlockGroup,
-  TDataGroup,
-  BlotBlock,
-} from './group-types';
+import { IArraySlice, flatten, sliceFromReverseWhile } from './../helpers/array';
+import { VideoItem, InlineGroup, BlockGroup, TDataGroup, BlotBlock } from './group-types';
 
 class Grouper {
   static pairOpsWithTheirBlock(ops: DeltaInsertOp[]): TDataGroup[] {
     let result: TDataGroup[] = [];
 
     const canBeInBlock = (op: DeltaInsertOp) => {
-      return !(
-        op.isJustNewline() ||
-        op.isCustomEmbedBlock() ||
-        op.isVideo() ||
-        op.isContainerBlock()
-      );
+      return !(op.isJustNewline() || op.isCustomEmbedBlock() || op.isVideo() || op.isContainerBlock());
     };
     const isInlineData = (op: DeltaInsertOp) => op.isInline();
 
@@ -52,41 +36,9 @@ class Grouper {
     return result;
   }
 
-  static groupConsecutiveSameStyleBlocks(
-    groups: TDataGroup[],
-    blocksOf = {
-      header: true,
-      codeBlocks: true,
-      blockquotes: true,
-      customBlocks: true,
-    }
-  ): Array<TDataGroup | BlockGroup[]> {
-    return groupConsecutiveElementsWhile(
-      groups,
-      (g: TDataGroup, gPrev: TDataGroup) => {
-        if (!(g instanceof BlockGroup) || !(gPrev instanceof BlockGroup)) {
-          return false;
-        }
-
-        return (
-          (blocksOf.codeBlocks &&
-            Grouper.areBothCodeblocksWithSameLang(g, gPrev)) ||
-          (blocksOf.blockquotes &&
-            Grouper.areBothBlockquotesWithSameAdi(g, gPrev)) ||
-          (blocksOf.header &&
-            Grouper.areBothSameHeadersWithSameAdi(g, gPrev)) ||
-          (blocksOf.customBlocks &&
-            Grouper.areBothCustomBlockWithSameAttr(g, gPrev))
-        );
-      }
-    );
-  }
-
   // Moves all ops of same style consecutive blocks to the ops of first block
   // and discards the rest.
-  static reduceConsecutiveSameStyleBlocksToOne(
-    groups: Array<TDataGroup | BlockGroup[]>
-  ): TDataGroup[] {
+  static reduceConsecutiveSameStyleBlocksToOne(groups: Array<TDataGroup | BlockGroup[]>): TDataGroup[] {
     var newLineOp = DeltaInsertOp.createNewLineOp();
     return groups.map(function (elm: TDataGroup | BlockGroup[]) {
       if (!Array.isArray(elm)) {
@@ -109,11 +61,7 @@ class Grouper {
   }
 
   static areBothCodeblocksWithSameLang(g1: BlockGroup, gOther: BlockGroup) {
-    return (
-      g1.op.isCodeBlock() &&
-      gOther.op.isCodeBlock() &&
-      g1.op.hasSameLangAs(gOther.op)
-    );
+    return g1.op.isCodeBlock() && gOther.op.isCodeBlock() && g1.op.hasSameLangAs(gOther.op);
   }
 
   static areBothSameHeadersWithSameAdi(g1: BlockGroup, gOther: BlockGroup) {
@@ -121,19 +69,11 @@ class Grouper {
   }
 
   static areBothBlockquotesWithSameAdi(g: BlockGroup, gOther: BlockGroup) {
-    return (
-      g.op.isBlockquote() &&
-      gOther.op.isBlockquote() &&
-      g.op.hasSameAdiAs(gOther.op)
-    );
+    return g.op.isBlockquote() && gOther.op.isBlockquote() && g.op.hasSameAdiAs(gOther.op);
   }
 
   static areBothCustomBlockWithSameAttr(g: BlockGroup, gOther: BlockGroup) {
-    return (
-      g.op.isCustomTextBlock() &&
-      gOther.op.isCustomTextBlock() &&
-      g.op.hasSameAttr(gOther.op)
-    );
+    return g.op.isCustomTextBlock() && gOther.op.isCustomTextBlock() && g.op.hasSameAttr(gOther.op);
   }
 }
 

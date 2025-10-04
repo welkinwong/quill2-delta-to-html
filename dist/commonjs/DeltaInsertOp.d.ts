@@ -12,7 +12,6 @@ declare class DeltaInsertOp {
   isTable(): boolean;
   isSameHeaderAs(op: DeltaInsertOp): boolean;
   hasSameAdiAs(op: DeltaInsertOp): boolean;
-  hasSameIndentationAs(op: DeltaInsertOp): boolean;
   hasSameAttr(op: DeltaInsertOp): boolean;
   hasHigherIndentThan(op: DeltaInsertOp): boolean;
   isInline(): boolean;
@@ -25,6 +24,7 @@ declare class DeltaInsertOp {
   isCheckedList(): boolean;
   isUncheckedList(): boolean;
   isACheckList(): boolean;
+  isSameCodeBlockAs(op: DeltaInsertOp): boolean;
   isSameListAs(op: DeltaInsertOp): boolean;
   isSameTableRowAs(op: DeltaInsertOp): boolean;
   isText(): boolean;

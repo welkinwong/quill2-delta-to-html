@@ -12,16 +12,7 @@ var OpAttributeSanitizer = (function () {
         if (!dirtyAttrs || typeof dirtyAttrs !== 'object') {
             return cleanAttrs;
         }
-        var booleanAttrs = [
-            'bold',
-            'italic',
-            'underline',
-            'strike',
-            'code',
-            'blockquote',
-            'code-block',
-            'renderAsBlock',
-        ];
+        var booleanAttrs = ['bold', 'italic', 'underline', 'strike', 'code', 'blockquote', 'code-block', 'renderAsBlock'];
         var colorAttrs = ['background', 'color'];
         var font = dirtyAttrs.font, size = dirtyAttrs.size, link = dirtyAttrs.link, script = dirtyAttrs.script, list = dirtyAttrs.list, header = dirtyAttrs.header, align = dirtyAttrs.align, direction = dirtyAttrs.direction, indent = dirtyAttrs.indent, mentions = dirtyAttrs.mentions, mention = dirtyAttrs.mention, width = dirtyAttrs.width, target = dirtyAttrs.target, rel = dirtyAttrs.rel;
         var codeBlock = dirtyAttrs['code-block'];

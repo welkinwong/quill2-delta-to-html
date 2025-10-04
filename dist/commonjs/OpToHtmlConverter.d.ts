@@ -16,6 +16,8 @@ export declare const DEFAULT_INLINE_STYLES: IInlineStyles;
 interface IOpToHtmlConverterOptions {
   classPrefix?: string;
   inlineStyles?: boolean | IInlineStyles;
+  simpleCodeBlock?: boolean;
+  simpleList?: boolean;
   encodeHtml?: boolean;
   listItemTag?: string;
   paragraphTag?: string;

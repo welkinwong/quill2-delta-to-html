@@ -61,27 +61,16 @@ class DeltaInsertOp {
     );
   }
 
-  hasSameIndentationAs(op: DeltaInsertOp) {
-    return this.attributes.indent === op.attributes.indent;
-  }
-
   hasSameAttr(op: DeltaInsertOp) {
     return isEqual(this.attributes, op.attributes);
   }
 
   hasHigherIndentThan(op: DeltaInsertOp) {
-    return (
-      (Number(this.attributes.indent) || 0) >
-      (Number(op.attributes.indent) || 0)
-    );
+    return (Number(this.attributes.indent) || 0) > (Number(op.attributes.indent) || 0);
   }
 
   isInline() {
-    return !(
-      this.isContainerBlock() ||
-      this.isVideo() ||
-      this.isCustomEmbedBlock()
-    );
+    return !(this.isContainerBlock() || this.isVideo() || this.isCustomEmbedBlock());
   }
 
   isCodeBlock() {
@@ -97,12 +86,7 @@ class DeltaInsertOp {
   }
 
   isList() {
-    return (
-      this.isOrderedList() ||
-      this.isBulletList() ||
-      this.isCheckedList() ||
-      this.isUncheckedList()
-    );
+    return this.isOrderedList() || this.isBulletList() || this.isCheckedList() || this.isUncheckedList();
   }
 
   isOrderedList() {
@@ -122,26 +106,25 @@ class DeltaInsertOp {
   }
 
   isACheckList() {
+    return this.attributes.list == ListType.Unchecked || this.attributes.list === ListType.Checked;
+  }
+
+  isSameCodeBlockAs(op: DeltaInsertOp): boolean {
     return (
-      this.attributes.list == ListType.Unchecked ||
-      this.attributes.list === ListType.Checked
+      !!this.attributes['code-block'] &&
+      (this.attributes['code-block'] === op.attributes['code-block'] || (this.isCodeBlock() && op.isCodeBlock()))
     );
   }
 
   isSameListAs(op: DeltaInsertOp): boolean {
     return (
       !!op.attributes.list &&
-      (this.attributes.list === op.attributes.list ||
-        (op.isACheckList() && this.isACheckList()))
+      (this.attributes.list === op.attributes.list || (op.isACheckList() && this.isACheckList()))
     );
   }
 
   isSameTableRowAs(op: DeltaInsertOp): boolean {
-    return (
-      !!op.isTable() &&
-      this.isTable() &&
-      this.attributes.table === op.attributes.table
-    );
+    return !!op.isTable() && this.isTable() && this.attributes.table === op.attributes.table;
   }
 
   isText() {

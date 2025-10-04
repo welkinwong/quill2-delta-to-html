@@ -48,20 +48,14 @@ var DeltaInsertOp = (function () {
             this.attributes.direction === op.attributes.direction &&
             this.attributes.indent === op.attributes.indent);
     };
-    DeltaInsertOp.prototype.hasSameIndentationAs = function (op) {
-        return this.attributes.indent === op.attributes.indent;
-    };
     DeltaInsertOp.prototype.hasSameAttr = function (op) {
         return lodash_isequal_1.default(this.attributes, op.attributes);
     };
     DeltaInsertOp.prototype.hasHigherIndentThan = function (op) {
-        return ((Number(this.attributes.indent) || 0) >
-            (Number(op.attributes.indent) || 0));
+        return (Number(this.attributes.indent) || 0) > (Number(op.attributes.indent) || 0);
     };
     DeltaInsertOp.prototype.isInline = function () {
-        return !(this.isContainerBlock() ||
-            this.isVideo() ||
-            this.isCustomEmbedBlock());
+        return !(this.isContainerBlock() || this.isVideo() || this.isCustomEmbedBlock());
     };
     DeltaInsertOp.prototype.isCodeBlock = function () {
         return !!this.attributes['code-block'];
@@ -73,10 +67,7 @@ var DeltaInsertOp = (function () {
         return this.insert.value === value_types_1.NewLine;
     };
     DeltaInsertOp.prototype.isList = function () {
-        return (this.isOrderedList() ||
-            this.isBulletList() ||
-            this.isCheckedList() ||
-            this.isUncheckedList());
+        return this.isOrderedList() || this.isBulletList() || this.isCheckedList() || this.isUncheckedList();
     };
     DeltaInsertOp.prototype.isOrderedList = function () {
         return this.attributes.list === value_types_1.ListType.Ordered;
@@ -91,18 +82,18 @@ var DeltaInsertOp = (function () {
         return this.attributes.list === value_types_1.ListType.Unchecked;
     };
     DeltaInsertOp.prototype.isACheckList = function () {
-        return (this.attributes.list == value_types_1.ListType.Unchecked ||
-            this.attributes.list === value_types_1.ListType.Checked);
+        return this.attributes.list == value_types_1.ListType.Unchecked || this.attributes.list === value_types_1.ListType.Checked;
+    };
+    DeltaInsertOp.prototype.isSameCodeBlockAs = function (op) {
+        return (!!this.attributes['code-block'] &&
+            (this.attributes['code-block'] === op.attributes['code-block'] || (this.isCodeBlock() && op.isCodeBlock())));
     };
     DeltaInsertOp.prototype.isSameListAs = function (op) {
         return (!!op.attributes.list &&
-            (this.attributes.list === op.attributes.list ||
-                (op.isACheckList() && this.isACheckList())));
+            (this.attributes.list === op.attributes.list || (op.isACheckList() && this.isACheckList())));
     };
     DeltaInsertOp.prototype.isSameTableRowAs = function (op) {
-        return (!!op.isTable() &&
-            this.isTable() &&
-            this.attributes.table === op.attributes.table);
+        return !!op.isTable() && this.isTable() && this.attributes.table === op.attributes.table;
     };
     DeltaInsertOp.prototype.isText = function () {
         return this.insert.type === value_types_1.DataType.Text;
@@ -135,7 +126,7 @@ var DeltaInsertOp = (function () {
 }());
 exports.DeltaInsertOp = DeltaInsertOp;
 
-},{"./InsertData":2,"./value-types":19,"lodash.isequal":20}],2:[function(require,module,exports){
+},{"./InsertData":2,"./value-types":20,"lodash.isequal":21}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var InsertDataQuill = (function () {
@@ -196,7 +187,7 @@ var InsertOpDenormalizer = (function () {
 }());
 exports.InsertOpDenormalizer = InsertOpDenormalizer;
 
-},{"./helpers/object":15,"./helpers/string":16,"./value-types":19}],4:[function(require,module,exports){
+},{"./helpers/object":16,"./helpers/string":17,"./value-types":20}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var DeltaInsertOp_1 = require("./DeltaInsertOp");
@@ -253,7 +244,7 @@ var InsertOpsConverter = (function () {
 }());
 exports.InsertOpsConverter = InsertOpsConverter;
 
-},{"./DeltaInsertOp":1,"./InsertData":2,"./InsertOpDenormalizer":3,"./OpAttributeSanitizer":5,"./OpLinkSanitizer":6,"./value-types":19}],5:[function(require,module,exports){
+},{"./DeltaInsertOp":1,"./InsertData":2,"./InsertOpDenormalizer":3,"./OpAttributeSanitizer":5,"./OpLinkSanitizer":6,"./value-types":20}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var value_types_1 = require("./value-types");
@@ -268,16 +259,7 @@ var OpAttributeSanitizer = (function () {
         if (!dirtyAttrs || typeof dirtyAttrs !== 'object') {
             return cleanAttrs;
         }
-        var booleanAttrs = [
-            'bold',
-            'italic',
-            'underline',
-            'strike',
-            'code',
-            'blockquote',
-            'code-block',
-            'renderAsBlock',
-        ];
+        var booleanAttrs = ['bold', 'italic', 'underline', 'strike', 'code', 'blockquote', 'code-block', 'renderAsBlock'];
         var colorAttrs = ['background', 'color'];
         var font = dirtyAttrs.font, size = dirtyAttrs.size, link = dirtyAttrs.link, script = dirtyAttrs.script, list = dirtyAttrs.list, header = dirtyAttrs.header, align = dirtyAttrs.align, direction = dirtyAttrs.direction, indent = dirtyAttrs.indent, mentions = dirtyAttrs.mentions, mention = dirtyAttrs.mention, width = dirtyAttrs.width, target = dirtyAttrs.target, rel = dirtyAttrs.rel;
         var codeBlock = dirtyAttrs['code-block'];
@@ -409,7 +391,7 @@ var OpAttributeSanitizer = (function () {
 }());
 exports.OpAttributeSanitizer = OpAttributeSanitizer;
 
-},{"./OpLinkSanitizer":6,"./helpers/array":14,"./mentions/MentionSanitizer":18,"./value-types":19}],6:[function(require,module,exports){
+},{"./OpLinkSanitizer":6,"./helpers/array":15,"./mentions/MentionSanitizer":19,"./value-types":20}],6:[function(require,module,exports){
 "use strict";
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
@@ -438,7 +420,7 @@ var OpLinkSanitizer = (function () {
 }());
 exports.OpLinkSanitizer = OpLinkSanitizer;
 
-},{"./funcs-html":9,"./helpers/url":17}],7:[function(require,module,exports){
+},{"./funcs-html":9,"./helpers/url":18}],7:[function(require,module,exports){
 "use strict";
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
@@ -471,7 +453,7 @@ exports.DEFAULT_INLINE_STYLES = {
     },
     direction: function (value, op) {
         if (value === 'rtl') {
-            return ('direction:rtl' + (op.attributes['align'] ? '' : '; text-align:inherit'));
+            return 'direction:rtl' + (op.attributes['align'] ? '' : '; text-align:inherit');
         }
         else {
             return undefined;
@@ -510,9 +492,7 @@ var OpToHtmlConverter = (function () {
         }
         var beginTags = [], endTags = [];
         var imgTag = 'img';
-        var isImageLink = function (tag) {
-            return tag === imgTag && !!_this.op.attributes.link;
-        };
+        var isImageLink = function (tag) { return tag === imgTag && !!_this.op.attributes.link; };
         for (var _i = 0, tags_1 = tags; _i < tags_1.length; _i++) {
             var tag = tags_1[_i];
             if (isImageLink(tag)) {
@@ -553,11 +533,7 @@ var OpToHtmlConverter = (function () {
         }
         return (this.getCustomCssClasses() || []).concat(propsArr
             .filter(function (prop) { return !!attrs[prop]; })
-            .filter(function (prop) {
-            return prop === 'background'
-                ? OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidColorLiteral(attrs[prop])
-                : true;
-        })
+            .filter(function (prop) { return (prop === 'background' ? OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidColorLiteral(attrs[prop]) : true); })
             .map(function (prop) { return prop + '-' + attrs[prop]; })
             .concat(this.op.isFormula() ? 'formula' : [])
             .concat(this.op.isVideo() ? 'video' : [])
@@ -586,8 +562,7 @@ var OpToHtmlConverter = (function () {
             .map(function (item) {
             var attribute = item[0];
             var attrValue = attrs[attribute];
-            var attributeConverter = (_this.options.inlineStyles &&
-                _this.options.inlineStyles[attribute]) ||
+            var attributeConverter = (_this.options.inlineStyles && _this.options.inlineStyles[attribute]) ||
                 exports.DEFAULT_INLINE_STYLES[attribute];
             if (typeof attributeConverter === 'object') {
                 return attributeConverter[attrValue];
@@ -609,18 +584,16 @@ var OpToHtmlConverter = (function () {
         var makeAttr = this.makeAttr.bind(this);
         var customTagAttributes = this.getCustomTagAttributes();
         var customAttr = customTagAttributes
-            ? Object.keys(this.getCustomTagAttributes()).map(function (k) {
-                return makeAttr(k, customTagAttributes[k]);
-            })
+            ? Object.keys(this.getCustomTagAttributes()).map(function (k) { return makeAttr(k, customTagAttributes[k]); })
             : [];
         var classes = this.getCssClasses();
-        var tagAttrs = classes.length
-            ? customAttr.concat([makeAttr('class', classes.join(' '))])
-            : customAttr;
+        var tagAttrs = classes.length ? customAttr.concat([makeAttr('class', classes.join(' '))]) : customAttr;
         if (this.op.isImage()) {
-            this.op.attributes.width &&
-                (tagAttrs = tagAttrs.concat(makeAttr('width', this.op.attributes.width)));
+            this.op.attributes.width && (tagAttrs = tagAttrs.concat(makeAttr('width', this.op.attributes.width)));
             return tagAttrs.concat(makeAttr('src', this.op.insert.value));
+        }
+        if (this.op.isList() && !this.options.simpleList) {
+            return tagAttrs.concat(makeAttr('data-list', this.op.attributes.list));
         }
         if (this.op.isACheckList()) {
             return tagAttrs.concat(makeAttr('data-checked', this.op.isCheckedList() ? 'true' : 'false'));
@@ -651,9 +624,16 @@ var OpToHtmlConverter = (function () {
         if (styles.length) {
             tagAttrs.push(makeAttr('style', styles.join(';')));
         }
-        if (this.op.isCodeBlock() &&
-            typeof this.op.attributes['code-block'] === 'string') {
-            return tagAttrs.concat(makeAttr('data-language', this.op.attributes['code-block']));
+        if (this.op.isCodeBlock()) {
+            if (!this.options.simpleCodeBlock) {
+                tagAttrs = tagAttrs.concat(makeAttr('class', this.prefixClass('code-block')));
+            }
+            if (typeof this.op.attributes['code-block'] === 'string') {
+                return tagAttrs.concat(makeAttr('data-language', this.op.attributes['code-block']));
+            }
+            else {
+                return tagAttrs;
+            }
         }
         if (this.op.isContainerBlock()) {
             return tagAttrs;
@@ -671,9 +651,7 @@ var OpToHtmlConverter = (function () {
         var targetForAll = OpAttributeSanitizer_1.OpAttributeSanitizer.isValidTarget(this.options.linkTarget || '')
             ? this.options.linkTarget
             : undefined;
-        var relForAll = OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidRel(this.options.linkRel || '')
-            ? this.options.linkRel
-            : undefined;
+        var relForAll = OpAttributeSanitizer_1.OpAttributeSanitizer.IsValidRel(this.options.linkRel || '') ? this.options.linkRel : undefined;
         var target = this.op.attributes.target || targetForAll;
         var rel = this.op.attributes.rel || relForAll;
         return tagAttrs
@@ -682,20 +660,17 @@ var OpToHtmlConverter = (function () {
             .concat(rel ? this.makeAttr('rel', rel) : []);
     };
     OpToHtmlConverter.prototype.getCustomTag = function (format) {
-        if (this.options.customTag &&
-            typeof this.options.customTag === 'function') {
+        if (this.options.customTag && typeof this.options.customTag === 'function') {
             return this.options.customTag.apply(null, [format, this.op]);
         }
     };
     OpToHtmlConverter.prototype.getCustomTagAttributes = function () {
-        if (this.options.customTagAttributes &&
-            typeof this.options.customTagAttributes === 'function') {
+        if (this.options.customTagAttributes && typeof this.options.customTagAttributes === 'function') {
             return this.options.customTagAttributes.apply(null, [this.op]);
         }
     };
     OpToHtmlConverter.prototype.getCustomCssClasses = function () {
-        if (this.options.customCssClasses &&
-            typeof this.options.customCssClasses === 'function') {
+        if (this.options.customCssClasses && typeof this.options.customCssClasses === 'function') {
             var res = this.options.customCssClasses.apply(null, [this.op]);
             if (res) {
                 return Array.isArray(res) ? res : [res];
@@ -703,8 +678,7 @@ var OpToHtmlConverter = (function () {
         }
     };
     OpToHtmlConverter.prototype.getCustomCssStyles = function () {
-        if (this.options.customCssStyles &&
-            typeof this.options.customCssStyles === 'function') {
+        if (this.options.customCssStyles && typeof this.options.customCssStyles === 'function') {
             var res = this.options.customCssStyles.apply(null, [this.op]);
             if (res) {
                 return Array.isArray(res) ? res : [res];
@@ -722,7 +696,6 @@ var OpToHtmlConverter = (function () {
         var positionTag = this.options.paragraphTag || 'p';
         var blocks = [
             ['blockquote'],
-            ['code-block', 'pre'],
             ['list', this.options.listItemTag],
             ['header'],
             ['align', positionTag],
@@ -734,11 +707,7 @@ var OpToHtmlConverter = (function () {
             var firstItem = item[0];
             if (attrs[firstItem]) {
                 var customTag = this.getCustomTag(firstItem);
-                return customTag
-                    ? [customTag]
-                    : firstItem === 'header'
-                        ? ['h' + attrs[firstItem]]
-                        : [arr.preferSecond(item)];
+                return customTag ? [customTag] : firstItem === 'header' ? ['h' + attrs[firstItem]] : [arr.preferSecond(item)];
             }
         }
         if (this.op.isCustomTextBlock()) {
@@ -778,7 +747,7 @@ var OpToHtmlConverter = (function () {
 }());
 exports.OpToHtmlConverter = OpToHtmlConverter;
 
-},{"./OpAttributeSanitizer":5,"./funcs-html":9,"./helpers/array":14,"./helpers/object":15,"./value-types":19}],8:[function(require,module,exports){
+},{"./OpAttributeSanitizer":5,"./funcs-html":9,"./helpers/array":15,"./helpers/object":16,"./value-types":20}],8:[function(require,module,exports){
 "use strict";
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
@@ -792,11 +761,12 @@ var InsertOpsConverter_1 = require("./InsertOpsConverter");
 var OpToHtmlConverter_1 = require("./OpToHtmlConverter");
 var Grouper_1 = require("./grouper/Grouper");
 var group_types_1 = require("./grouper/group-types");
-var ListNester_1 = require("./grouper/ListNester");
+var ListGrouper_1 = require("./grouper/ListGrouper");
 var funcs_html_1 = require("./funcs-html");
 var obj = __importStar(require("./helpers/object"));
 var value_types_1 = require("./value-types");
 var TableGrouper_1 = require("./grouper/TableGrouper");
+var CodeBlockGrouper_1 = require("./grouper/CodeBlockGrouper");
 var BrTag = '<br/>';
 var QuillDeltaToHtmlConverter = (function () {
     function QuillDeltaToHtmlConverter(deltaOps, options) {
@@ -807,16 +777,14 @@ var QuillDeltaToHtmlConverter = (function () {
             encodeHtml: true,
             classPrefix: 'ql',
             inlineStyles: false,
-            multiLineBlockquote: true,
-            multiLineHeader: true,
-            multiLineCodeblock: true,
-            multiLineParagraph: true,
-            multiLineCustomBlock: true,
+            simpleCodeBlock: false,
+            simpleList: false,
             allowBackgroundClasses: false,
+            linkRel: 'noopener noreferrer',
             linkTarget: '_blank',
         }, options, {
             orderedListTag: 'ol',
-            bulletListTag: 'ul',
+            bulletListTag: options && options.simpleList ? 'ul' : 'ol',
             listItemTag: 'li',
         });
         var inlineStyles;
@@ -833,6 +801,8 @@ var QuillDeltaToHtmlConverter = (function () {
             encodeHtml: this.options.encodeHtml,
             classPrefix: this.options.classPrefix,
             inlineStyles: inlineStyles,
+            simpleCodeBlock: this.options.simpleCodeBlock,
+            simpleList: this.options.simpleList,
             listItemTag: this.options.listItemTag,
             paragraphTag: this.options.paragraphTag,
             linkRel: this.options.linkRel,
@@ -859,38 +829,33 @@ var QuillDeltaToHtmlConverter = (function () {
     QuillDeltaToHtmlConverter.prototype.getGroupedOps = function () {
         var deltaOps = InsertOpsConverter_1.InsertOpsConverter.convert(this.rawDeltaOps, this.options);
         var pairedOps = Grouper_1.Grouper.pairOpsWithTheirBlock(deltaOps);
-        var groupedSameStyleBlocks = Grouper_1.Grouper.groupConsecutiveSameStyleBlocks(pairedOps, {
-            blockquotes: !!this.options.multiLineBlockquote,
-            header: !!this.options.multiLineHeader,
-            codeBlocks: !!this.options.multiLineCodeblock,
-            customBlocks: !!this.options.multiLineCustomBlock,
-        });
-        var groupedOps = Grouper_1.Grouper.reduceConsecutiveSameStyleBlocksToOne(groupedSameStyleBlocks);
+        var groupedOps = Grouper_1.Grouper.reduceConsecutiveSameStyleBlocksToOne(pairedOps);
         var tableGrouper = new TableGrouper_1.TableGrouper();
         groupedOps = tableGrouper.group(groupedOps);
-        var listNester = new ListNester_1.ListNester();
-        return listNester.nest(groupedOps);
+        var codeBlockGrouper = new CodeBlockGrouper_1.CodeBlockGrouper();
+        groupedOps = codeBlockGrouper.group(groupedOps);
+        var listGrouper = new ListGrouper_1.ListGrouper();
+        return listGrouper.group(groupedOps);
     };
     QuillDeltaToHtmlConverter.prototype.convert = function () {
         var _this = this;
         var groups = this.getGroupedOps();
         return groups
             .map(function (group) {
-            if (group instanceof group_types_1.ListGroup) {
-                return _this._renderWithCallbacks(value_types_1.GroupType.List, group, function () {
-                    return _this._renderList(group);
+            if (group instanceof group_types_1.CodeBlockGroup) {
+                return _this._renderWithCallbacks(value_types_1.GroupType.CodeBlock, group, function () {
+                    return _this._renderCodeBlock(group);
                 });
             }
+            else if (group instanceof group_types_1.ListGroup) {
+                return _this._renderWithCallbacks(value_types_1.GroupType.List, group, function () { return _this._renderList(group); });
+            }
             else if (group instanceof group_types_1.TableGroup) {
-                return _this._renderWithCallbacks(value_types_1.GroupType.Table, group, function () {
-                    return _this._renderTable(group);
-                });
+                return _this._renderWithCallbacks(value_types_1.GroupType.Table, group, function () { return _this._renderTable(group); });
             }
             else if (group instanceof group_types_1.BlockGroup) {
                 var g = group;
-                return _this._renderWithCallbacks(value_types_1.GroupType.Block, group, function () {
-                    return _this._renderBlock(g.op, g.ops);
-                });
+                return _this._renderWithCallbacks(value_types_1.GroupType.Block, group, function () { return _this._renderBlock(g.op, g.ops); });
             }
             else if (group instanceof group_types_1.BlotBlock) {
                 return _this._renderCustom(group.op, null);
@@ -913,19 +878,38 @@ var QuillDeltaToHtmlConverter = (function () {
     QuillDeltaToHtmlConverter.prototype._renderWithCallbacks = function (groupType, group, myRenderFn) {
         var html = '';
         var beforeCb = this.callbacks['beforeRender_cb'];
-        html =
-            typeof beforeCb === 'function'
-                ? beforeCb.apply(null, [groupType, group])
-                : '';
+        html = typeof beforeCb === 'function' ? beforeCb.apply(null, [groupType, group]) : '';
         if (!html) {
             html = myRenderFn();
         }
         var afterCb = this.callbacks['afterRender_cb'];
-        html =
-            typeof afterCb === 'function'
-                ? afterCb.apply(null, [groupType, html])
-                : html;
+        html = typeof afterCb === 'function' ? afterCb.apply(null, [groupType, html]) : html;
         return html;
+    };
+    QuillDeltaToHtmlConverter.prototype._renderCodeBlock = function (codeBlockGroup) {
+        var _this = this;
+        var tag = this.options.simpleCodeBlock ? 'pre' : 'div';
+        return (funcs_html_1.makeStartTag(tag, this.options.simpleCodeBlock
+            ? undefined
+            : {
+                key: 'class',
+                value: this.options.classPrefix + "-code-block-container",
+            }) +
+            codeBlockGroup.items
+                .map(function (codeBlock, index) { return _this._renderCodeBlockItem(codeBlock, index === codeBlockGroup.items.length - 1); })
+                .join('') +
+            funcs_html_1.makeEndTag(tag));
+    };
+    QuillDeltaToHtmlConverter.prototype._renderCodeBlockItem = function (codeBlock, isLast) {
+        var converter = new OpToHtmlConverter_1.OpToHtmlConverter(codeBlock.item.op, this.converterOptions);
+        var parts = converter.getHtmlParts();
+        var codeBlockElementsHtml = funcs_html_1.encodeHtml(codeBlock.item.ops.map(function (iop) { return iop.insert.value; }).join(''));
+        if (this.options.simpleCodeBlock) {
+            return codeBlockElementsHtml + (isLast ? '' : BrTag);
+        }
+        else {
+            return parts.openingTag + codeBlockElementsHtml + parts.closingTag;
+        }
     };
     QuillDeltaToHtmlConverter.prototype._renderList = function (list) {
         var _this = this;
@@ -935,14 +919,11 @@ var QuillDeltaToHtmlConverter = (function () {
             funcs_html_1.makeEndTag(this._getListTag(firstItem.item.op)));
     };
     QuillDeltaToHtmlConverter.prototype._renderListItem = function (li) {
-        li.item.op.attributes.indent = 0;
         var converter = new OpToHtmlConverter_1.OpToHtmlConverter(li.item.op, this.converterOptions);
         var parts = converter.getHtmlParts();
+        var prefixHtml = this.options.simpleList ? '' : '<span class="ql-ui" contenteditable="false"></span>';
         var liElementsHtml = this._renderInlines(li.item.ops, false);
-        return (parts.openingTag +
-            liElementsHtml +
-            (li.innerList ? this._renderList(li.innerList) : '') +
-            parts.closingTag);
+        return parts.openingTag + prefixHtml + liElementsHtml + parts.closingTag;
     };
     QuillDeltaToHtmlConverter.prototype._renderTable = function (table) {
         var _this = this;
@@ -954,9 +935,7 @@ var QuillDeltaToHtmlConverter = (function () {
     };
     QuillDeltaToHtmlConverter.prototype._renderTableRow = function (row) {
         var _this = this;
-        return (funcs_html_1.makeStartTag('tr') +
-            row.cells.map(function (cell) { return _this._renderTableCell(cell); }).join('') +
-            funcs_html_1.makeEndTag('tr'));
+        return (funcs_html_1.makeStartTag('tr') + row.cells.map(function (cell) { return _this._renderTableCell(cell); }).join('') + funcs_html_1.makeEndTag('tr'));
     };
     QuillDeltaToHtmlConverter.prototype._renderTableCell = function (cell) {
         var converter = new OpToHtmlConverter_1.OpToHtmlConverter(cell.item.op, this.converterOptions);
@@ -977,13 +956,7 @@ var QuillDeltaToHtmlConverter = (function () {
         var htmlParts = converter.getHtmlParts();
         if (bop.isCodeBlock()) {
             return (htmlParts.openingTag +
-                funcs_html_1.encodeHtml(ops
-                    .map(function (iop) {
-                    return iop.isCustomEmbed()
-                        ? _this._renderCustom(iop, bop)
-                        : iop.insert.value;
-                })
-                    .join('')) +
+                funcs_html_1.encodeHtml(ops.map(function (iop) { return (iop.isCustomEmbed() ? _this._renderCustom(iop, bop) : iop.insert.value); }).join('')) +
                 htmlParts.closingTag);
         }
         var inlines = ops.map(function (op) { return _this._renderInline(op, bop); }).join('');
@@ -1006,7 +979,7 @@ var QuillDeltaToHtmlConverter = (function () {
         }
         var startParaTag = funcs_html_1.makeStartTag(this.options.paragraphTag);
         var endParaTag = funcs_html_1.makeEndTag(this.options.paragraphTag);
-        if (html === BrTag || this.options.multiLineParagraph) {
+        if (html === BrTag) {
             return startParaTag + html + endParaTag;
         }
         return (startParaTag +
@@ -1049,7 +1022,7 @@ var QuillDeltaToHtmlConverter = (function () {
 }());
 exports.QuillDeltaToHtmlConverter = QuillDeltaToHtmlConverter;
 
-},{"./InsertOpsConverter":4,"./OpToHtmlConverter":7,"./funcs-html":9,"./grouper/Grouper":10,"./grouper/ListNester":11,"./grouper/TableGrouper":12,"./grouper/group-types":13,"./helpers/object":15,"./value-types":19}],9:[function(require,module,exports){
+},{"./InsertOpsConverter":4,"./OpToHtmlConverter":7,"./funcs-html":9,"./grouper/CodeBlockGrouper":10,"./grouper/Grouper":11,"./grouper/ListGrouper":12,"./grouper/TableGrouper":13,"./grouper/group-types":14,"./helpers/object":16,"./value-types":20}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var EncodeTarget;
@@ -1135,6 +1108,40 @@ function decodeMapping(str, mapping) {
 },{}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var group_types_1 = require("./group-types");
+var array_1 = require("../helpers/array");
+var CodeBlockGrouper = (function () {
+    function CodeBlockGrouper() {
+    }
+    CodeBlockGrouper.prototype.group = function (groups) {
+        var codeBlocked = this.convertCodeBlocksToCodeBlockGroups(groups);
+        return codeBlocked;
+    };
+    CodeBlockGrouper.prototype.convertCodeBlocksToCodeBlockGroups = function (items) {
+        var grouped = array_1.groupConsecutiveElementsWhile(items, function (g, gPrev) {
+            return (g instanceof group_types_1.BlockGroup &&
+                gPrev instanceof group_types_1.BlockGroup &&
+                g.op.isCodeBlock() &&
+                gPrev.op.isCodeBlock() &&
+                g.op.isSameCodeBlockAs(gPrev.op));
+        });
+        return grouped.map(function (item) {
+            if (!Array.isArray(item)) {
+                if (item instanceof group_types_1.BlockGroup && item.op.isCodeBlock()) {
+                    return new group_types_1.CodeBlockGroup([new group_types_1.CodeBlockItem(item)]);
+                }
+                return item;
+            }
+            return new group_types_1.CodeBlockGroup(item.map(function (g) { return new group_types_1.CodeBlockItem(g); }));
+        });
+    };
+    return CodeBlockGrouper;
+}());
+exports.CodeBlockGrouper = CodeBlockGrouper;
+
+},{"../helpers/array":15,"./group-types":14}],11:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var DeltaInsertOp_1 = require("./../DeltaInsertOp");
 var array_1 = require("./../helpers/array");
 var group_types_1 = require("./group-types");
@@ -1144,10 +1151,7 @@ var Grouper = (function () {
     Grouper.pairOpsWithTheirBlock = function (ops) {
         var result = [];
         var canBeInBlock = function (op) {
-            return !(op.isJustNewline() ||
-                op.isCustomEmbedBlock() ||
-                op.isVideo() ||
-                op.isContainerBlock());
+            return !(op.isJustNewline() || op.isCustomEmbedBlock() || op.isVideo() || op.isContainerBlock());
         };
         var isInlineData = function (op) { return op.isInline(); };
         var lastInd = ops.length - 1;
@@ -1174,27 +1178,6 @@ var Grouper = (function () {
         result.reverse();
         return result;
     };
-    Grouper.groupConsecutiveSameStyleBlocks = function (groups, blocksOf) {
-        if (blocksOf === void 0) { blocksOf = {
-            header: true,
-            codeBlocks: true,
-            blockquotes: true,
-            customBlocks: true,
-        }; }
-        return array_1.groupConsecutiveElementsWhile(groups, function (g, gPrev) {
-            if (!(g instanceof group_types_1.BlockGroup) || !(gPrev instanceof group_types_1.BlockGroup)) {
-                return false;
-            }
-            return ((blocksOf.codeBlocks &&
-                Grouper.areBothCodeblocksWithSameLang(g, gPrev)) ||
-                (blocksOf.blockquotes &&
-                    Grouper.areBothBlockquotesWithSameAdi(g, gPrev)) ||
-                (blocksOf.header &&
-                    Grouper.areBothSameHeadersWithSameAdi(g, gPrev)) ||
-                (blocksOf.customBlocks &&
-                    Grouper.areBothCustomBlockWithSameAttr(g, gPrev)));
-        });
-    };
     Grouper.reduceConsecutiveSameStyleBlocksToOne = function (groups) {
         var newLineOp = DeltaInsertOp_1.DeltaInsertOp.createNewLineOp();
         return groups.map(function (elm) {
@@ -1215,67 +1198,40 @@ var Grouper = (function () {
         });
     };
     Grouper.areBothCodeblocksWithSameLang = function (g1, gOther) {
-        return (g1.op.isCodeBlock() &&
-            gOther.op.isCodeBlock() &&
-            g1.op.hasSameLangAs(gOther.op));
+        return g1.op.isCodeBlock() && gOther.op.isCodeBlock() && g1.op.hasSameLangAs(gOther.op);
     };
     Grouper.areBothSameHeadersWithSameAdi = function (g1, gOther) {
         return g1.op.isSameHeaderAs(gOther.op) && g1.op.hasSameAdiAs(gOther.op);
     };
     Grouper.areBothBlockquotesWithSameAdi = function (g, gOther) {
-        return (g.op.isBlockquote() &&
-            gOther.op.isBlockquote() &&
-            g.op.hasSameAdiAs(gOther.op));
+        return g.op.isBlockquote() && gOther.op.isBlockquote() && g.op.hasSameAdiAs(gOther.op);
     };
     Grouper.areBothCustomBlockWithSameAttr = function (g, gOther) {
-        return (g.op.isCustomTextBlock() &&
-            gOther.op.isCustomTextBlock() &&
-            g.op.hasSameAttr(gOther.op));
+        return g.op.isCustomTextBlock() && gOther.op.isCustomTextBlock() && g.op.hasSameAttr(gOther.op);
     };
     return Grouper;
 }());
 exports.Grouper = Grouper;
 
-},{"./../DeltaInsertOp":1,"./../helpers/array":14,"./group-types":13}],11:[function(require,module,exports){
+},{"./../DeltaInsertOp":1,"./../helpers/array":15,"./group-types":14}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var group_types_1 = require("./group-types");
-var array_1 = require("./../helpers/array");
-var ListNester = (function () {
-    function ListNester() {
+var array_1 = require("../helpers/array");
+var ListGrouper = (function () {
+    function ListGrouper() {
     }
-    ListNester.prototype.nest = function (groups) {
-        var _this = this;
+    ListGrouper.prototype.group = function (groups) {
         var listBlocked = this.convertListBlocksToListGroups(groups);
-        var groupedByListGroups = this.groupConsecutiveListGroups(listBlocked);
-        var nested = array_1.flatten(groupedByListGroups.map(function (group) {
-            if (!Array.isArray(group)) {
-                return group;
-            }
-            return _this.nestListSection(group);
-        }));
-        var groupRootLists = array_1.groupConsecutiveElementsWhile(nested, function (curr, prev) {
-            if (!(curr instanceof group_types_1.ListGroup && prev instanceof group_types_1.ListGroup)) {
-                return false;
-            }
-            return curr.items[0].item.op.isSameListAs(prev.items[0].item.op);
-        });
-        return groupRootLists.map(function (v) {
-            if (!Array.isArray(v)) {
-                return v;
-            }
-            var litems = v.map(function (g) { return g.items; });
-            return new group_types_1.ListGroup(array_1.flatten(litems));
-        });
+        return listBlocked;
     };
-    ListNester.prototype.convertListBlocksToListGroups = function (items) {
+    ListGrouper.prototype.convertListBlocksToListGroups = function (items) {
         var grouped = array_1.groupConsecutiveElementsWhile(items, function (g, gPrev) {
             return (g instanceof group_types_1.BlockGroup &&
                 gPrev instanceof group_types_1.BlockGroup &&
                 g.op.isList() &&
                 gPrev.op.isList() &&
-                g.op.isSameListAs(gPrev.op) &&
-                g.op.hasSameIndentationAs(gPrev.op));
+                g.op.isSameListAs(gPrev.op));
         });
         return grouped.map(function (item) {
             if (!Array.isArray(item)) {
@@ -1287,59 +1243,11 @@ var ListNester = (function () {
             return new group_types_1.ListGroup(item.map(function (g) { return new group_types_1.ListItem(g); }));
         });
     };
-    ListNester.prototype.groupConsecutiveListGroups = function (items) {
-        return array_1.groupConsecutiveElementsWhile(items, function (curr, prev) {
-            return curr instanceof group_types_1.ListGroup && prev instanceof group_types_1.ListGroup;
-        });
-    };
-    ListNester.prototype.nestListSection = function (sectionItems) {
-        var _this = this;
-        var indentGroups = this.groupByIndent(sectionItems);
-        Object.keys(indentGroups)
-            .map(Number)
-            .sort()
-            .reverse()
-            .forEach(function (indent) {
-            indentGroups[indent].forEach(function (lg) {
-                var idx = sectionItems.indexOf(lg);
-                if (_this.placeUnderParent(lg, sectionItems.slice(0, idx))) {
-                    sectionItems.splice(idx, 1);
-                }
-            });
-        });
-        return sectionItems;
-    };
-    ListNester.prototype.groupByIndent = function (items) {
-        return items.reduce(function (pv, cv) {
-            var indent = cv.items[0].item.op.attributes.indent;
-            if (indent) {
-                pv[indent] = pv[indent] || [];
-                pv[indent].push(cv);
-            }
-            return pv;
-        }, {});
-    };
-    ListNester.prototype.placeUnderParent = function (target, items) {
-        for (var i = items.length - 1; i >= 0; i--) {
-            var elm = items[i];
-            if (target.items[0].item.op.hasHigherIndentThan(elm.items[0].item.op)) {
-                var parent = elm.items[elm.items.length - 1];
-                if (parent.innerList) {
-                    parent.innerList.items = parent.innerList.items.concat(target.items);
-                }
-                else {
-                    parent.innerList = target;
-                }
-                return true;
-            }
-        }
-        return false;
-    };
-    return ListNester;
+    return ListGrouper;
 }());
-exports.ListNester = ListNester;
+exports.ListGrouper = ListGrouper;
 
-},{"./../helpers/array":14,"./group-types":13}],12:[function(require,module,exports){
+},{"../helpers/array":15,"./group-types":14}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var group_types_1 = require("./group-types");
@@ -1354,10 +1262,7 @@ var TableGrouper = (function () {
     TableGrouper.prototype.convertTableBlocksToTableGroups = function (items) {
         var _this = this;
         var grouped = array_1.groupConsecutiveElementsWhile(items, function (g, gPrev) {
-            return (g instanceof group_types_1.BlockGroup &&
-                gPrev instanceof group_types_1.BlockGroup &&
-                g.op.isTable() &&
-                gPrev.op.isTable());
+            return g instanceof group_types_1.BlockGroup && gPrev instanceof group_types_1.BlockGroup && g.op.isTable() && gPrev.op.isTable();
         });
         return grouped.map(function (item) {
             if (!Array.isArray(item)) {
@@ -1378,16 +1283,14 @@ var TableGrouper = (function () {
                 g.op.isSameTableRowAs(gPrev.op));
         });
         return grouped.map(function (item) {
-            return new group_types_1.TableRow(Array.isArray(item)
-                ? item.map(function (it) { return new group_types_1.TableCell(it); })
-                : [new group_types_1.TableCell(item)]);
+            return new group_types_1.TableRow(Array.isArray(item) ? item.map(function (it) { return new group_types_1.TableCell(it); }) : [new group_types_1.TableCell(item)]);
         });
     };
     return TableGrouper;
 }());
 exports.TableGrouper = TableGrouper;
 
-},{"../helpers/array":14,"./group-types":13}],13:[function(require,module,exports){
+},{"../helpers/array":15,"./group-types":14}],14:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -1437,6 +1340,20 @@ var BlockGroup = (function () {
     return BlockGroup;
 }());
 exports.BlockGroup = BlockGroup;
+var CodeBlockGroup = (function () {
+    function CodeBlockGroup(items) {
+        this.items = items;
+    }
+    return CodeBlockGroup;
+}());
+exports.CodeBlockGroup = CodeBlockGroup;
+var CodeBlockItem = (function () {
+    function CodeBlockItem(item) {
+        this.item = item;
+    }
+    return CodeBlockItem;
+}());
+exports.CodeBlockItem = CodeBlockItem;
 var ListGroup = (function () {
     function ListGroup(items) {
         this.items = items;
@@ -1445,10 +1362,8 @@ var ListGroup = (function () {
 }());
 exports.ListGroup = ListGroup;
 var ListItem = (function () {
-    function ListItem(item, innerList) {
-        if (innerList === void 0) { innerList = null; }
+    function ListItem(item) {
         this.item = item;
-        this.innerList = innerList;
     }
     return ListItem;
 }());
@@ -1475,7 +1390,7 @@ var TableCell = (function () {
 }());
 exports.TableCell = TableCell;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function preferSecond(arr) {
@@ -1544,7 +1459,7 @@ function intersperse(arr, item) {
 }
 exports.intersperse = intersperse;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function assign(target) {
@@ -1570,7 +1485,7 @@ function assign(target) {
 }
 exports.assign = assign;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function tokenizeWithNewLines(str) {
@@ -1600,7 +1515,7 @@ function tokenizeWithNewLines(str) {
 }
 exports.tokenizeWithNewLines = tokenizeWithNewLines;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function sanitize(str) {
@@ -1614,7 +1529,7 @@ function sanitize(str) {
 }
 exports.sanitize = sanitize;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var OpLinkSanitizer_1 = require("../OpLinkSanitizer");
@@ -1659,7 +1574,7 @@ var MentionSanitizer = (function () {
 }());
 exports.MentionSanitizer = MentionSanitizer;
 
-},{"../OpLinkSanitizer":6}],19:[function(require,module,exports){
+},{"../OpLinkSanitizer":6}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var NewLine = '\n';
@@ -1703,13 +1618,14 @@ var GroupType;
 (function (GroupType) {
     GroupType["Block"] = "block";
     GroupType["InlineGroup"] = "inline-group";
+    GroupType["CodeBlock"] = "code-block";
     GroupType["List"] = "list";
     GroupType["Video"] = "video";
     GroupType["Table"] = "table";
 })(GroupType || (GroupType = {}));
 exports.GroupType = GroupType;
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 (function (global){
 /**
  * Lodash (Custom Build) <https://lodash.com/>

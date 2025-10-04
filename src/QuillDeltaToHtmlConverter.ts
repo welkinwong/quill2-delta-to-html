@@ -1,9 +1,5 @@
 import { InsertOpsConverter } from './InsertOpsConverter';
-import {
-  OpToHtmlConverter,
-  IOpToHtmlConverterOptions,
-  IInlineStyles,
-} from './OpToHtmlConverter';
+import { OpToHtmlConverter, IOpToHtmlConverterOptions, IInlineStyles } from './OpToHtmlConverter';
 import { DeltaInsertOp } from './DeltaInsertOp';
 import { Grouper } from './grouper/Grouper';
 import {
@@ -17,25 +13,22 @@ import {
   TableGroup,
   TableRow,
   TableCell,
+  CodeBlockGroup,
+  CodeBlockItem,
 } from './grouper/group-types';
-import { ListNester } from './grouper/ListNester';
+import { ListGrouper } from './grouper/ListGrouper';
 import { makeStartTag, makeEndTag, encodeHtml } from './funcs-html';
 import * as obj from './helpers/object';
 import { GroupType } from './value-types';
 import { IOpAttributeSanitizerOptions } from './OpAttributeSanitizer';
 import { TableGrouper } from './grouper/TableGrouper';
+import { CodeBlockGrouper } from './grouper/CodeBlockGrouper';
 
-interface IQuillDeltaToHtmlConverterOptions
-  extends IOpAttributeSanitizerOptions,
-    IOpToHtmlConverterOptions {
+interface IQuillDeltaToHtmlConverterOptions extends IOpAttributeSanitizerOptions, IOpToHtmlConverterOptions {
   orderedListTag?: string;
   bulletListTag?: string;
-
-  multiLineBlockquote?: boolean;
-  multiLineHeader?: boolean;
-  multiLineCodeblock?: boolean;
-  multiLineParagraph?: boolean;
-  multiLineCustomBlock?: boolean;
+  simpleCodeBlock?: boolean;
+  simpleList?: boolean;
 }
 
 const BrTag = '<br/>';
@@ -55,18 +48,16 @@ class QuillDeltaToHtmlConverter {
         encodeHtml: true,
         classPrefix: 'ql',
         inlineStyles: false,
-        multiLineBlockquote: true,
-        multiLineHeader: true,
-        multiLineCodeblock: true,
-        multiLineParagraph: true,
-        multiLineCustomBlock: true,
+        simpleCodeBlock: false,
+        simpleList: false,
         allowBackgroundClasses: false,
+        linkRel: 'noopener noreferrer',
         linkTarget: '_blank',
       },
       options,
       {
         orderedListTag: 'ol',
-        bulletListTag: 'ul',
+        bulletListTag: options && options.simpleList ? 'ul' : 'ol',
         listItemTag: 'li',
       }
     );
@@ -84,6 +75,8 @@ class QuillDeltaToHtmlConverter {
       encodeHtml: this.options.encodeHtml,
       classPrefix: this.options.classPrefix,
       inlineStyles: inlineStyles,
+      simpleCodeBlock: this.options.simpleCodeBlock,
+      simpleList: this.options.simpleList,
       listItemTag: this.options.listItemTag,
       paragraphTag: this.options.paragraphTag,
       linkRel: this.options.linkRel,
@@ -114,45 +107,34 @@ class QuillDeltaToHtmlConverter {
 
     var pairedOps = Grouper.pairOpsWithTheirBlock(deltaOps);
 
-    var groupedSameStyleBlocks = Grouper.groupConsecutiveSameStyleBlocks(
-      pairedOps,
-      {
-        blockquotes: !!this.options.multiLineBlockquote,
-        header: !!this.options.multiLineHeader,
-        codeBlocks: !!this.options.multiLineCodeblock,
-        customBlocks: !!this.options.multiLineCustomBlock,
-      }
-    );
-
-    var groupedOps = Grouper.reduceConsecutiveSameStyleBlocksToOne(
-      groupedSameStyleBlocks
-    );
+    var groupedOps = Grouper.reduceConsecutiveSameStyleBlocksToOne(pairedOps);
 
     var tableGrouper = new TableGrouper();
     groupedOps = tableGrouper.group(groupedOps);
 
-    var listNester = new ListNester();
-    return listNester.nest(groupedOps);
+    var codeBlockGrouper = new CodeBlockGrouper();
+    groupedOps = codeBlockGrouper.group(groupedOps);
+
+    var listGrouper = new ListGrouper();
+    return listGrouper.group(groupedOps);
   }
 
   convert() {
     let groups = this.getGroupedOps();
     return groups
-      .map((group) => {
-        if (group instanceof ListGroup) {
-          return this._renderWithCallbacks(GroupType.List, group, () =>
-            this._renderList(<ListGroup>group)
+      .map(group => {
+        if (group instanceof CodeBlockGroup) {
+          return this._renderWithCallbacks(GroupType.CodeBlock, group, () =>
+            this._renderCodeBlock(<CodeBlockGroup>group)
           );
+        } else if (group instanceof ListGroup) {
+          return this._renderWithCallbacks(GroupType.List, group, () => this._renderList(<ListGroup>group));
         } else if (group instanceof TableGroup) {
-          return this._renderWithCallbacks(GroupType.Table, group, () =>
-            this._renderTable(<TableGroup>group)
-          );
+          return this._renderWithCallbacks(GroupType.Table, group, () => this._renderTable(<TableGroup>group));
         } else if (group instanceof BlockGroup) {
           var g = <BlockGroup>group;
 
-          return this._renderWithCallbacks(GroupType.Block, group, () =>
-            this._renderBlock(g.op, g.ops)
-          );
+          return this._renderWithCallbacks(GroupType.Block, group, () => this._renderBlock(g.op, g.ops));
         } else if (group instanceof BlotBlock) {
           return this._renderCustom(group.op, null);
         } else if (group instanceof VideoItem) {
@@ -171,29 +153,52 @@ class QuillDeltaToHtmlConverter {
       .join('');
   }
 
-  _renderWithCallbacks(
-    groupType: GroupType,
-    group: TDataGroup,
-    myRenderFn: () => string
-  ) {
+  _renderWithCallbacks(groupType: GroupType, group: TDataGroup, myRenderFn: () => string) {
     var html = '';
     var beforeCb = this.callbacks['beforeRender_cb'];
-    html =
-      typeof beforeCb === 'function'
-        ? beforeCb.apply(null, [groupType, group])
-        : '';
+    html = typeof beforeCb === 'function' ? beforeCb.apply(null, [groupType, group]) : '';
 
     if (!html) {
       html = myRenderFn();
     }
 
     var afterCb = this.callbacks['afterRender_cb'];
-    html =
-      typeof afterCb === 'function'
-        ? afterCb.apply(null, [groupType, html])
-        : html;
+    html = typeof afterCb === 'function' ? afterCb.apply(null, [groupType, html]) : html;
 
     return html;
+  }
+
+  _renderCodeBlock(codeBlockGroup: CodeBlockGroup): string {
+    const tag = this.options.simpleCodeBlock ? 'pre' : 'div';
+
+    return (
+      makeStartTag(
+        tag,
+        this.options.simpleCodeBlock
+          ? undefined
+          : {
+              key: 'class',
+              value: `${this.options.classPrefix}-code-block-container`,
+            }
+      ) +
+      codeBlockGroup.items
+        .map((codeBlock, index) => this._renderCodeBlockItem(codeBlock, index === codeBlockGroup.items.length - 1))
+        .join('') +
+      makeEndTag(tag)
+    );
+  }
+
+  _renderCodeBlockItem(codeBlock: CodeBlockItem, isLast: boolean): string {
+    var converter = new OpToHtmlConverter(codeBlock.item.op, this.converterOptions);
+    var parts = converter.getHtmlParts();
+
+    var codeBlockElementsHtml = encodeHtml(codeBlock.item.ops.map(iop => iop.insert.value).join(''));
+
+    if (this.options.simpleCodeBlock) {
+      return codeBlockElementsHtml + (isLast ? '' : BrTag);
+    } else {
+      return parts.openingTag + codeBlockElementsHtml + parts.closingTag;
+    }
   }
 
   _renderList(list: ListGroup): string {
@@ -206,18 +211,11 @@ class QuillDeltaToHtmlConverter {
   }
 
   _renderListItem(li: ListItem): string {
-    //if (!isOuterMost) {
-    li.item.op.attributes.indent = 0;
-    //}
     var converter = new OpToHtmlConverter(li.item.op, this.converterOptions);
     var parts = converter.getHtmlParts();
+    var prefixHtml = this.options.simpleList ? '' : '<span class="ql-ui" contenteditable="false"></span>';
     var liElementsHtml = this._renderInlines(li.item.ops, false);
-    return (
-      parts.openingTag +
-      liElementsHtml +
-      (li.innerList ? this._renderList(li.innerList) : '') +
-      parts.closingTag
-    );
+    return parts.openingTag + prefixHtml + liElementsHtml + parts.closingTag;
   }
 
   _renderTable(table: TableGroup): string {
@@ -232,9 +230,7 @@ class QuillDeltaToHtmlConverter {
 
   _renderTableRow(row: TableRow): string {
     return (
-      makeStartTag('tr') +
-      row.cells.map((cell: TableCell) => this._renderTableCell(cell)).join('') +
-      makeEndTag('tr')
+      makeStartTag('tr') + row.cells.map((cell: TableCell) => this._renderTableCell(cell)).join('') + makeEndTag('tr')
     );
   }
 
@@ -261,20 +257,12 @@ class QuillDeltaToHtmlConverter {
     if (bop.isCodeBlock()) {
       return (
         htmlParts.openingTag +
-        encodeHtml(
-          ops
-            .map((iop) =>
-              iop.isCustomEmbed()
-                ? this._renderCustom(iop, bop)
-                : iop.insert.value
-            )
-            .join('')
-        ) +
+        encodeHtml(ops.map(iop => (iop.isCustomEmbed() ? this._renderCustom(iop, bop) : iop.insert.value)).join('')) +
         htmlParts.closingTag
       );
     }
 
-    var inlines = ops.map((op) => this._renderInline(op, bop)).join('');
+    var inlines = ops.map(op => this._renderInline(op, bop)).join('');
     return htmlParts.openingTag + (inlines || BrTag) + htmlParts.closingTag;
   }
 
@@ -294,14 +282,14 @@ class QuillDeltaToHtmlConverter {
 
     let startParaTag = makeStartTag(this.options.paragraphTag);
     let endParaTag = makeEndTag(this.options.paragraphTag);
-    if (html === BrTag || this.options.multiLineParagraph) {
+    if (html === BrTag) {
       return startParaTag + html + endParaTag;
     }
     return (
       startParaTag +
       html
         .split(BrTag)
-        .map((v) => {
+        .map(v => {
           return v === '' ? BrTag : v;
         })
         .join(endParaTag + startParaTag) +
@@ -337,9 +325,7 @@ class QuillDeltaToHtmlConverter {
     }
   }
 
-  renderCustomWith(
-    cb: (op: DeltaInsertOp, contextOp: DeltaInsertOp) => string
-  ) {
+  renderCustomWith(cb: (op: DeltaInsertOp, contextOp: DeltaInsertOp) => string) {
     this.callbacks['renderCustomOp_cb'] = cb;
   }
 }

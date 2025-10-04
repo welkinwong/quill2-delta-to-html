@@ -1,9 +1,4 @@
-import {
-  makeStartTag,
-  makeEndTag,
-  encodeHtml,
-  ITagKeyValue,
-} from './funcs-html';
+import { makeStartTag, makeEndTag, encodeHtml, ITagKeyValue } from './funcs-html';
 import { DeltaInsertOp } from './DeltaInsertOp';
 import { ScriptType, NewLine } from './value-types';
 import * as obj from './helpers/object';
@@ -11,9 +6,7 @@ import { IMention } from './mentions/MentionSanitizer';
 import * as arr from './helpers/array';
 import { OpAttributeSanitizer } from './OpAttributeSanitizer';
 
-export type InlineStyleType =
-  | ((value: string, op: DeltaInsertOp) => string | undefined)
-  | { [x: string]: string };
+export type InlineStyleType = ((value: string, op: DeltaInsertOp) => string | undefined) | { [x: string]: string };
 
 export interface IInlineStyles {
   indent?: InlineStyleType;
@@ -29,7 +22,7 @@ const DEFAULT_INLINE_FONTS: { [key: string]: string } = {
 };
 
 export const DEFAULT_INLINE_STYLES: IInlineStyles = {
-  font: (value) => DEFAULT_INLINE_FONTS[value] || 'font-family:' + value,
+  font: value => DEFAULT_INLINE_FONTS[value] || 'font-family:' + value,
   size: {
     small: 'font-size: 0.75em',
     large: 'font-size: 1.5em',
@@ -42,9 +35,7 @@ export const DEFAULT_INLINE_STYLES: IInlineStyles = {
   },
   direction: (value, op) => {
     if (value === 'rtl') {
-      return (
-        'direction:rtl' + (op.attributes['align'] ? '' : '; text-align:inherit')
-      );
+      return 'direction:rtl' + (op.attributes['align'] ? '' : '; text-align:inherit');
     } else {
       return undefined;
     }
@@ -54,6 +45,8 @@ export const DEFAULT_INLINE_STYLES: IInlineStyles = {
 interface IOpToHtmlConverterOptions {
   classPrefix?: string;
   inlineStyles?: boolean | IInlineStyles;
+  simpleCodeBlock?: boolean;
+  simpleList?: boolean;
   encodeHtml?: boolean;
   listItemTag?: string;
   paragraphTag?: string;
@@ -118,8 +111,7 @@ class OpToHtmlConverter {
     let beginTags = [],
       endTags = [];
     const imgTag = 'img';
-    const isImageLink = (tag: any) =>
-      tag === imgTag && !!this.op.attributes.link;
+    const isImageLink = (tag: any) => tag === imgTag && !!this.op.attributes.link;
     for (var tag of tags) {
       if (isImageLink(tag)) {
         beginTags.push(makeStartTag('a', this.getLinkAttrs()));
@@ -150,8 +142,7 @@ class OpToHtmlConverter {
       return this.op.insert.value;
     }
 
-    var content =
-      this.op.isFormula() || this.op.isText() ? this.op.insert.value : '';
+    var content = this.op.isFormula() || this.op.isText() ? this.op.insert.value : '';
 
     return (this.options.encodeHtml && encodeHtml(content)) || content;
   }
@@ -171,13 +162,9 @@ class OpToHtmlConverter {
     }
     return (this.getCustomCssClasses() || []).concat(
       propsArr
-        .filter((prop) => !!attrs[prop])
-        .filter((prop) =>
-          prop === 'background'
-            ? OpAttributeSanitizer.IsValidColorLiteral(attrs[prop])
-            : true
-        )
-        .map((prop) => prop + '-' + attrs[prop])
+        .filter(prop => !!attrs[prop])
+        .filter(prop => (prop === 'background' ? OpAttributeSanitizer.IsValidColorLiteral(attrs[prop]) : true))
+        .map(prop => prop + '-' + attrs[prop])
         .concat(this.op.isFormula() ? 'formula' : [])
         .concat(this.op.isVideo() ? 'video' : [])
         .concat(this.op.isImage() ? 'image' : [])
@@ -205,23 +192,19 @@ class OpToHtmlConverter {
     return (this.getCustomCssStyles() || [])
       .concat(
         propsArr
-          .filter((item) => !!attrs[item[0]])
+          .filter(item => !!attrs[item[0]])
           .map((item: any[]) => {
             let attribute = item[0];
             let attrValue = attrs[attribute];
 
             let attributeConverter: InlineStyleType =
-              (this.options.inlineStyles &&
-                (this.options.inlineStyles as any)[attribute]) ||
+              (this.options.inlineStyles && (this.options.inlineStyles as any)[attribute]) ||
               (DEFAULT_INLINE_STYLES as any)[attribute];
 
             if (typeof attributeConverter === 'object') {
               return attributeConverter[attrValue];
             } else if (typeof attributeConverter === 'function') {
-              var converterFn = attributeConverter as (
-                value: string,
-                op: DeltaInsertOp
-              ) => string;
+              var converterFn = attributeConverter as (value: string, op: DeltaInsertOp) => string;
               return converterFn(attrValue, this.op);
             } else {
               return arr.preferSecond(item) + ':' + attrValue;
@@ -239,27 +222,22 @@ class OpToHtmlConverter {
     const makeAttr = this.makeAttr.bind(this);
     const customTagAttributes = this.getCustomTagAttributes();
     const customAttr = customTagAttributes
-      ? Object.keys(this.getCustomTagAttributes()).map((k) =>
-          makeAttr(k, customTagAttributes[k])
-        )
+      ? Object.keys(this.getCustomTagAttributes()).map(k => makeAttr(k, customTagAttributes[k]))
       : [];
     var classes = this.getCssClasses();
-    var tagAttrs = classes.length
-      ? customAttr.concat([makeAttr('class', classes.join(' '))])
-      : customAttr;
+    var tagAttrs = classes.length ? customAttr.concat([makeAttr('class', classes.join(' '))]) : customAttr;
 
     if (this.op.isImage()) {
-      this.op.attributes.width &&
-        (tagAttrs = tagAttrs.concat(
-          makeAttr('width', this.op.attributes.width)
-        ));
+      this.op.attributes.width && (tagAttrs = tagAttrs.concat(makeAttr('width', this.op.attributes.width)));
       return tagAttrs.concat(makeAttr('src', this.op.insert.value));
     }
 
+    if (this.op.isList() && !this.options.simpleList) {
+      return tagAttrs.concat(makeAttr('data-list', this.op.attributes.list));
+    }
+
     if (this.op.isACheckList()) {
-      return tagAttrs.concat(
-        makeAttr('data-checked', this.op.isCheckedList() ? 'true' : 'false')
-      );
+      return tagAttrs.concat(makeAttr('data-checked', this.op.isCheckedList() ? 'true' : 'false'));
     }
 
     if (this.op.isFormula()) {
@@ -280,9 +258,7 @@ class OpToHtmlConverter {
         tagAttrs = tagAttrs.concat(makeAttr('class', mention.class));
       }
       if (mention['end-point'] && mention.slug) {
-        tagAttrs = tagAttrs.concat(
-          makeAttr('href', mention['end-point'] + '/' + mention.slug)
-        );
+        tagAttrs = tagAttrs.concat(makeAttr('href', mention['end-point'] + '/' + mention.slug));
       } else {
         tagAttrs = tagAttrs.concat(makeAttr('href', 'about:blank'));
       }
@@ -297,13 +273,16 @@ class OpToHtmlConverter {
       tagAttrs.push(makeAttr('style', styles.join(';')));
     }
 
-    if (
-      this.op.isCodeBlock() &&
-      typeof this.op.attributes['code-block'] === 'string'
-    ) {
-      return tagAttrs.concat(
-        makeAttr('data-language', this.op.attributes['code-block'])
-      );
+    if (this.op.isCodeBlock()) {
+      if (!this.options.simpleCodeBlock) {
+        tagAttrs = tagAttrs.concat(makeAttr('class', this.prefixClass('code-block')));
+      }
+
+      if (typeof this.op.attributes['code-block'] === 'string') {
+        return tagAttrs.concat(makeAttr('data-language', this.op.attributes['code-block']));
+      } else {
+        return tagAttrs;
+      }
     }
 
     if (this.op.isContainerBlock()) {
@@ -324,14 +303,10 @@ class OpToHtmlConverter {
   getLinkAttrs(): Array<ITagKeyValue> {
     let tagAttrs: ITagKeyValue[] = [];
 
-    let targetForAll = OpAttributeSanitizer.isValidTarget(
-      this.options.linkTarget || ''
-    )
+    let targetForAll = OpAttributeSanitizer.isValidTarget(this.options.linkTarget || '')
       ? this.options.linkTarget
       : undefined;
-    let relForAll = OpAttributeSanitizer.IsValidRel(this.options.linkRel || '')
-      ? this.options.linkRel
-      : undefined;
+    let relForAll = OpAttributeSanitizer.IsValidRel(this.options.linkRel || '') ? this.options.linkRel : undefined;
 
     let target = this.op.attributes.target || targetForAll;
     let rel = this.op.attributes.rel || relForAll;
@@ -343,28 +318,19 @@ class OpToHtmlConverter {
   }
 
   getCustomTag(format: string) {
-    if (
-      this.options.customTag &&
-      typeof this.options.customTag === 'function'
-    ) {
+    if (this.options.customTag && typeof this.options.customTag === 'function') {
       return this.options.customTag.apply(null, [format, this.op]);
     }
   }
 
   getCustomTagAttributes() {
-    if (
-      this.options.customTagAttributes &&
-      typeof this.options.customTagAttributes === 'function'
-    ) {
+    if (this.options.customTagAttributes && typeof this.options.customTagAttributes === 'function') {
       return this.options.customTagAttributes.apply(null, [this.op]);
     }
   }
 
   getCustomCssClasses() {
-    if (
-      this.options.customCssClasses &&
-      typeof this.options.customCssClasses === 'function'
-    ) {
+    if (this.options.customCssClasses && typeof this.options.customCssClasses === 'function') {
       const res = this.options.customCssClasses.apply(null, [this.op]);
       if (res) {
         return Array.isArray(res) ? res : [res];
@@ -373,10 +339,7 @@ class OpToHtmlConverter {
   }
 
   getCustomCssStyles() {
-    if (
-      this.options.customCssStyles &&
-      typeof this.options.customCssStyles === 'function'
-    ) {
+    if (this.options.customCssStyles && typeof this.options.customCssStyles === 'function') {
       const res = this.options.customCssStyles.apply(null, [this.op]);
       if (res) {
         return Array.isArray(res) ? res : [res];
@@ -399,7 +362,6 @@ class OpToHtmlConverter {
 
     var blocks = [
       ['blockquote'],
-      ['code-block', 'pre'],
       ['list', this.options.listItemTag],
       ['header'],
       ['align', positionTag],
@@ -410,11 +372,7 @@ class OpToHtmlConverter {
       var firstItem = item[0]!;
       if (attrs[firstItem]) {
         const customTag = this.getCustomTag(firstItem);
-        return customTag
-          ? [customTag]
-          : firstItem === 'header'
-          ? ['h' + attrs[firstItem]]
-          : [arr.preferSecond(item)!];
+        return customTag ? [customTag] : firstItem === 'header' ? ['h' + attrs[firstItem]] : [arr.preferSecond(item)!];
       }
     }
 
@@ -446,9 +404,9 @@ class OpToHtmlConverter {
     return [
       ...inlineTags.filter((item: string[]) => !!attrs[item[0]]),
       ...Object.keys(customTagsMap)
-        .filter((t) => !inlineTags.some((it) => it[0] == t))
-        .map((t) => [t, customTagsMap[t]]),
-    ].map((item) => {
+        .filter(t => !inlineTags.some(it => it[0] == t))
+        .map(t => [t, customTagsMap[t]]),
+    ].map(item => {
       return customTagsMap[item[0]]
         ? customTagsMap[item[0]]
         : item[0] === 'script'

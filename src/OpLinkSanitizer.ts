@@ -1,7 +1,4 @@
-import {
-  IOpAttributeSanitizerOptions,
-  IUrlSanitizerFn,
-} from './OpAttributeSanitizer';
+import { IOpAttributeSanitizerOptions, IUrlSanitizerFn } from './OpAttributeSanitizer';
 import * as url from './helpers/url';
 import { encodeLink } from './funcs-html';
 

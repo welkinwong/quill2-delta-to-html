@@ -28,16 +28,9 @@ declare enum DataType {
 declare enum GroupType {
   Block = 'block',
   InlineGroup = 'inline-group',
+  CodeBlock = 'code-block',
   List = 'list',
   Video = 'video',
   Table = 'table',
 }
-export {
-  NewLine,
-  ListType,
-  ScriptType,
-  DirectionType,
-  AlignType,
-  DataType,
-  GroupType,
-};
+export { NewLine, ListType, ScriptType, DirectionType, AlignType, DataType, GroupType };
