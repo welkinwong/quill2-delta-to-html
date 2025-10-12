@@ -110,13 +110,12 @@ class OpToHtmlConverter {
 
     let beginTags = [],
       endTags = [];
-    const imgTag = 'img';
-    const isImageLink = (tag: any) => tag === imgTag && !!this.op.attributes.link;
+    const isImageLink = (tag: any) => tag === 'img' && !!this.op.attributes.link;
     for (var tag of tags) {
       if (isImageLink(tag)) {
         beginTags.push(makeStartTag('a', this.getLinkAttrs()));
       }
-      beginTags.push(makeStartTag(tag, attrs));
+      beginTags.push(makeStartTag(tag, tag === 'a' ? this.getLinkAttrs() : attrs));
       endTags.push(tag === 'img' ? '' : makeEndTag(tag));
       if (isImageLink(tag)) {
         endTags.push(makeEndTag('a'));
@@ -289,10 +288,6 @@ class OpToHtmlConverter {
       return tagAttrs;
     }
 
-    if (this.op.isLink()) {
-      tagAttrs = tagAttrs.concat(this.getLinkAttrs());
-    }
-
     return tagAttrs;
   }
 
@@ -312,6 +307,7 @@ class OpToHtmlConverter {
     let rel = this.op.attributes.rel || relForAll;
 
     return tagAttrs
+      .concat(this.makeAttr('class', this.prefixClass('link')))
       .concat(this.makeAttr('href', this.op.attributes.link!))
       .concat(target ? this.makeAttr('target', target) : [])
       .concat(rel ? this.makeAttr('rel', rel) : []);
@@ -390,15 +386,16 @@ class OpToHtmlConverter {
       return res;
     }, {} as any);
 
+    // order matters https://github.com/slab/quill/blob/539cbffd0a13b18e9c65eb84dd35e6596e403158/packages/quill/src/blots/inline.ts#L8
     const inlineTags = [
-      ['link', 'a'],
-      ['mentions', 'a'],
+      ['code'],
       ['script'],
       ['bold', 'strong'],
       ['italic', 'em'],
       ['strike', 's'],
       ['underline', 'u'],
-      ['code'],
+      ['mentions', 'a'],
+      ['link', 'a'],
     ];
 
     return [

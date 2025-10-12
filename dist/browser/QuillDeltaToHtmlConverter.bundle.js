@@ -491,14 +491,13 @@ var OpToHtmlConverter = (function () {
             tags.push('span');
         }
         var beginTags = [], endTags = [];
-        var imgTag = 'img';
-        var isImageLink = function (tag) { return tag === imgTag && !!_this.op.attributes.link; };
+        var isImageLink = function (tag) { return tag === 'img' && !!_this.op.attributes.link; };
         for (var _i = 0, tags_1 = tags; _i < tags_1.length; _i++) {
             var tag = tags_1[_i];
             if (isImageLink(tag)) {
                 beginTags.push(funcs_html_1.makeStartTag('a', this.getLinkAttrs()));
             }
-            beginTags.push(funcs_html_1.makeStartTag(tag, attrs));
+            beginTags.push(funcs_html_1.makeStartTag(tag, tag === 'a' ? this.getLinkAttrs() : attrs));
             endTags.push(tag === 'img' ? '' : funcs_html_1.makeEndTag(tag));
             if (isImageLink(tag)) {
                 endTags.push(funcs_html_1.makeEndTag('a'));
@@ -638,9 +637,6 @@ var OpToHtmlConverter = (function () {
         if (this.op.isContainerBlock()) {
             return tagAttrs;
         }
-        if (this.op.isLink()) {
-            tagAttrs = tagAttrs.concat(this.getLinkAttrs());
-        }
         return tagAttrs;
     };
     OpToHtmlConverter.prototype.makeAttr = function (k, v) {
@@ -655,6 +651,7 @@ var OpToHtmlConverter = (function () {
         var target = this.op.attributes.target || targetForAll;
         var rel = this.op.attributes.rel || relForAll;
         return tagAttrs
+            .concat(this.makeAttr('class', this.prefixClass('link')))
             .concat(this.makeAttr('href', this.op.attributes.link))
             .concat(target ? this.makeAttr('target', target) : [])
             .concat(rel ? this.makeAttr('rel', rel) : []);
@@ -722,14 +719,14 @@ var OpToHtmlConverter = (function () {
             return res;
         }, {});
         var inlineTags = [
-            ['link', 'a'],
-            ['mentions', 'a'],
+            ['code'],
             ['script'],
             ['bold', 'strong'],
             ['italic', 'em'],
             ['strike', 's'],
             ['underline', 'u'],
-            ['code'],
+            ['mentions', 'a'],
+            ['link', 'a'],
         ];
         return inlineTags.filter(function (item) { return !!attrs[item[0]]; }).concat(Object.keys(customTagsMap)
             .filter(function (t) { return !inlineTags.some(function (it) { return it[0] == t; }); })
