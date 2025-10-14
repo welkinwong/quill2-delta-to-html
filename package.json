@@ -4,6 +4,7 @@
   "description": "Converts Quill's delta ops to HTML",
   "main": "./dist/commonjs/main.js",
   "types": "./dist/commonjs/main.d.ts",
+  "files": ["dist", "README.md", "LICENSE"],
   "peerDependencies": {
     "quill": "^2.0.0"
   },
@@ -30,7 +31,8 @@
     "build": "./node_modules/typescript/bin/tsc &&  npm run browser ",
     "test": "./node_modules/nyc/bin/nyc.js ./node_modules/mocha/bin/mocha --require ts-node/register -b \"./test/**/*.ts\"  ",
     "coverage": "./node_modules/nyc/bin/nyc.js report --reporter=text-lcov | coveralls ",
-    "coveragehtml": "./node_modules/nyc/bin/nyc.js report --reporter=html "
+    "coveragehtml": "./node_modules/nyc/bin/nyc.js report --reporter=html ",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
