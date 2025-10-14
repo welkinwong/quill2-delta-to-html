@@ -10,6 +10,7 @@ interface IOpAttributes {
   font?: string | undefined;
   size?: string | undefined;
   width?: string | undefined;
+  height?: string | undefined;
 
   link?: string | undefined;
   bold?: boolean | undefined;
@@ -70,6 +71,7 @@ class OpAttributeSanitizer {
       mentions,
       mention,
       width,
+      height,
       target,
       rel,
     } = dirtyAttrs;
@@ -90,6 +92,7 @@ class OpAttributeSanitizer {
       'mentions',
       'mention',
       'width',
+      'height',
       'target',
       'rel',
       'code-block',
@@ -121,8 +124,12 @@ class OpAttributeSanitizer {
       cleanAttrs.size = size;
     }
 
-    if (width && OpAttributeSanitizer.IsValidWidth(width + '')) {
+    if (width && OpAttributeSanitizer.IsValidWidthOrHeight(width + '')) {
       cleanAttrs.width = width;
+    }
+
+    if (height && OpAttributeSanitizer.IsValidWidthOrHeight(height + '')) {
+      cleanAttrs.height = height;
     }
 
     if (link) {
@@ -210,8 +217,8 @@ class OpAttributeSanitizer {
     return !!size.match(/^[a-z0-9\-]{1,20}$/i);
   }
 
-  static IsValidWidth(width: string) {
-    return !!width.match(/^[0-9]*(px|em|%)?$/);
+  static IsValidWidthOrHeight(widthOrHeight: string) {
+    return !!widthOrHeight.match(/^\d+(\.\d+)?(px|em|%)?$/);
   }
 
   static isValidTarget(target: string) {
