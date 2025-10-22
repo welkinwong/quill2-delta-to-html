@@ -15,15 +15,12 @@ You can try a live demo of the conversion by opening the `demo-browser.html` fil
 
 Installation
 ```
-npm install quill-delta-to-html
+npm install quill2-delta-to-html
 ```
 
 Usage
 ```javascript
-var QuillDeltaToHtmlConverter = require('quill-delta-to-html').QuillDeltaToHtmlConverter;
-
-// TypeScript / ES6:
-// import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html'; 
+import { QuillDeltaToHtmlConverter } from 'quill2-delta-to-html'; 
 
 var deltaOps =  [
     {insert: "Hello\n"},
