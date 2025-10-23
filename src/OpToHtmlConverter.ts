@@ -60,9 +60,9 @@ interface IOpToHtmlConverterOptions {
 }
 
 interface IHtmlParts {
-  openingTag: string;
+  openingTags: string[];
   content: string;
-  closingTag: string;
+  closingTags: string[];
 }
 
 class OpToHtmlConverter {
@@ -93,12 +93,12 @@ class OpToHtmlConverter {
 
   getHtml(): string {
     var parts = this.getHtmlParts();
-    return parts.openingTag + parts.content + parts.closingTag;
+    return parts.openingTags.join('') + parts.content + parts.closingTags.join('');
   }
 
   getHtmlParts(): IHtmlParts {
     if (this.op.isJustNewline() && !this.op.isContainerBlock()) {
-      return { openingTag: '', closingTag: '', content: NewLine };
+      return { openingTags: [], content: NewLine, closingTags: [] };
     }
 
     let tags = this.getTags(),
@@ -126,9 +126,9 @@ class OpToHtmlConverter {
     endTags.reverse();
 
     return {
-      openingTag: beginTags.join(''),
+      openingTags: beginTags,
       content: this.getContent(),
-      closingTag: endTags.join(''),
+      closingTags: endTags,
     };
   }
 

@@ -1,5 +1,5 @@
 import { InsertOpsConverter } from './InsertOpsConverter';
-import { OpToHtmlConverter, IOpToHtmlConverterOptions, IInlineStyles } from './OpToHtmlConverter';
+import { OpToHtmlConverter, IOpToHtmlConverterOptions, IInlineStyles, IHtmlParts } from './OpToHtmlConverter';
 import { DeltaInsertOp } from './DeltaInsertOp';
 import { Grouper } from './grouper/Grouper';
 import {
@@ -30,6 +30,12 @@ interface IQuillDeltaToHtmlConverterOptions extends IOpAttributeSanitizerOptions
   simpleCodeBlock?: boolean;
   simpleList?: boolean;
 }
+
+type RichNode = {
+  openingTag: string;
+  closingTag: string;
+  children: Array<RichNode | string>;
+};
 
 const BrTag = '<br/>';
 
@@ -197,7 +203,7 @@ class QuillDeltaToHtmlConverter {
     if (this.options.simpleCodeBlock) {
       return codeBlockElementsHtml + (isLast ? '' : BrTag);
     } else {
-      return parts.openingTag + codeBlockElementsHtml + parts.closingTag;
+      return parts.openingTags.join('') + codeBlockElementsHtml + parts.closingTags.join('');
     }
   }
 
@@ -215,7 +221,7 @@ class QuillDeltaToHtmlConverter {
     var parts = converter.getHtmlParts();
     var prefixHtml = this.options.simpleList ? '' : '<span class="ql-ui" contenteditable="false"></span>';
     var liElementsHtml = this._renderInlines(li.item.ops, false);
-    return parts.openingTag + prefixHtml + liElementsHtml + parts.closingTag;
+    return parts.openingTags.join('') + prefixHtml + liElementsHtml + parts.closingTags.join('');
   }
 
   _renderTable(table: TableGroup): string {
@@ -243,9 +249,9 @@ class QuillDeltaToHtmlConverter {
         key: 'data-row',
         value: cell.item.op.attributes.table,
       }) +
-      parts.openingTag +
+      parts.openingTags.join('') +
       cellElementsHtml +
-      parts.closingTag +
+      parts.closingTags.join('') +
       makeEndTag('td')
     );
   }
@@ -256,35 +262,95 @@ class QuillDeltaToHtmlConverter {
 
     if (bop.isCodeBlock()) {
       return (
-        htmlParts.openingTag +
+        htmlParts.openingTags.join('') +
         encodeHtml(ops.map(iop => (iop.isCustomEmbed() ? this._renderCustom(iop, bop) : iop.insert.value)).join('')) +
-        htmlParts.closingTag
+        htmlParts.closingTags.join('')
       );
     }
 
-    var inlines = ops.map(op => this._renderInline(op, bop)).join('');
-    return htmlParts.openingTag + (inlines || BrTag) + htmlParts.closingTag;
+    var inlines = this._renderInlines(ops, false);
+    return htmlParts.openingTags.join('') + (inlines || BrTag) + htmlParts.closingTags.join('');
+  }
+
+  _mergeInlines(parts: IHtmlParts[]): Array<RichNode | string> {
+    const root = { children: [] as Array<RichNode | string> };
+    const stack: Array<{ node: RichNode | typeof root; tag?: string }> = [{ node: root }];
+    let currentPath: string[] = [];
+
+    const appendChild = (list: Array<RichNode | string>, value: string | RichNode) => {
+      if (typeof value === 'string' && value) {
+        const last = list[list.length - 1];
+        if (typeof last === 'string') {
+          list[list.length - 1] = last + value;
+          return;
+        }
+      }
+      list.push(value);
+    };
+
+    for (const { openingTags = [], closingTags = [], content } of parts) {
+      let common = 0;
+      while (
+        common < openingTags.length &&
+        common < currentPath.length &&
+        openingTags[common] === currentPath[common]
+      ) {
+        common++;
+      }
+      while (currentPath.length > common) {
+        stack.pop();
+        currentPath.pop();
+      }
+      for (let i = common; i < openingTags.length; i++) {
+        const closingIndex = closingTags.length ? closingTags.length - 1 - i : -1;
+        const node: RichNode = {
+          openingTag: openingTags[i],
+          closingTag: closingIndex >= 0 ? closingTags[closingIndex] || '' : '',
+          children: [],
+        };
+        appendChild(stack[stack.length - 1].node.children, node);
+        stack.push({ node, tag: openingTags[i] });
+        currentPath.push(openingTags[i]);
+      }
+      appendChild(stack[stack.length - 1].node.children, content);
+    }
+
+    return root.children;
   }
 
   _renderInlines(ops: DeltaInsertOp[], isInlineGroup = true) {
-    var opsLen = ops.length - 1;
-    var html = ops
-      .map((op: DeltaInsertOp, i: number) => {
-        if (i > 0 && i === opsLen && op.isJustNewline()) {
-          return '';
-        }
-        return this._renderInline(op, null);
-      })
-      .join('');
+    const inlines: IHtmlParts[] = [];
+    for (let i = 0; i < ops.length; i++) {
+      const op = ops[i];
+      if (i > 0 && i === ops.length - 1 && op.isJustNewline()) continue;
+
+      const part = this._renderInline(op, null);
+      if (part !== undefined) inlines.push(part);
+    }
+
+    const htmlParts = this._mergeInlines(inlines);
+
+    function renderRichNode(node: RichNode | string): string {
+      if (typeof node === 'string') return node;
+      return node.openingTag + node.children.map(child => renderRichNode(child)).join('') + node.closingTag;
+    }
+
+    const html = htmlParts
+      .map(part => renderRichNode(part))
+      .join('')
+      .replace(/\n/g, BrTag);
+
     if (!isInlineGroup) {
       return html;
     }
 
     let startParaTag = makeStartTag(this.options.paragraphTag);
     let endParaTag = makeEndTag(this.options.paragraphTag);
+
     if (html === BrTag) {
       return startParaTag + html + endParaTag;
     }
+
     return (
       startParaTag +
       html
@@ -299,10 +365,12 @@ class QuillDeltaToHtmlConverter {
 
   _renderInline(op: DeltaInsertOp, contextOp: DeltaInsertOp | null) {
     if (op.isCustomEmbed()) {
-      return this._renderCustom(op, contextOp);
+      const content = this._renderCustom(op, contextOp);
+      return { openingTags: [], closingTags: [], content } as IHtmlParts;
     }
     var converter = new OpToHtmlConverter(op, this.converterOptions);
-    return converter.getHtml().replace(/\n/g, BrTag);
+
+    return converter.getHtmlParts();
   }
 
   _renderCustom(op: DeltaInsertOp, contextOp: DeltaInsertOp | null) {
