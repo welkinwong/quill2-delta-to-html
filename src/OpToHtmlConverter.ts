@@ -115,7 +115,7 @@ class OpToHtmlConverter {
       if (isImageLink(tag)) {
         beginTags.push(makeStartTag('a', this.getLinkAttrs()));
       }
-      beginTags.push(makeStartTag(tag, tag === 'a' ? this.getLinkAttrs() : attrs));
+      beginTags.push(makeStartTag(tag, attrs));
       endTags.push(tag === 'img' ? '' : makeEndTag(tag));
       if (isImageLink(tag)) {
         endTags.push(makeEndTag('a'));
@@ -287,6 +287,10 @@ class OpToHtmlConverter {
 
     if (this.op.isContainerBlock()) {
       return tagAttrs;
+    }
+
+    if (this.op.isLink()) {
+      tagAttrs = tagAttrs.concat(this.getLinkAttrs());
     }
 
     return tagAttrs;
