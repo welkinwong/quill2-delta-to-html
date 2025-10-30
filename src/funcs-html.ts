@@ -54,6 +54,7 @@ function encodeLink(str: string) {
 function encodeMappings(mtype: EncodeTarget) {
   let maps = [
     ['&', '&amp;'],
+    [' ', '&nbsp;'],
     ['<', '&lt;'],
     ['>', '&gt;'],
     ['"', '&quot;'],
