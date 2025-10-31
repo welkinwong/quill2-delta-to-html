@@ -188,29 +188,44 @@ class OpToHtmlConverter {
       ]);
     }
 
-    return (this.getCustomCssStyles() || [])
-      .concat(
-        propsArr
-          .filter(item => !!attrs[item[0]])
-          .map((item: any[]) => {
-            let attribute = item[0];
-            let attrValue = attrs[attribute];
+    const styleKey = (style: string) => {
+      const idx = style.indexOf(':');
+      return idx > -1 ? style.slice(0, idx).trim().toLowerCase() : style.trim().toLowerCase();
+    };
 
-            let attributeConverter: InlineStyleType =
-              (this.options.inlineStyles && (this.options.inlineStyles as any)[attribute]) ||
-              (DEFAULT_INLINE_STYLES as any)[attribute];
+    const generatedStyles = propsArr
+      .filter(item => !!attrs[item[0]])
+      .map((item: any[]) => {
+        let attribute = item[0];
+        let attrValue = attrs[attribute];
 
-            if (typeof attributeConverter === 'object') {
-              return attributeConverter[attrValue];
-            } else if (typeof attributeConverter === 'function') {
-              var converterFn = attributeConverter as (value: string, op: DeltaInsertOp) => string;
-              return converterFn(attrValue, this.op);
-            } else {
-              return arr.preferSecond(item) + ':' + attrValue;
-            }
-          })
-      )
-      .filter((item: any) => item !== undefined);
+        let attributeConverter: InlineStyleType =
+          (this.options.inlineStyles && (this.options.inlineStyles as any)[attribute]) ||
+          (DEFAULT_INLINE_STYLES as any)[attribute];
+
+        if (typeof attributeConverter === 'object') {
+          return attributeConverter[attrValue];
+        } else if (typeof attributeConverter === 'function') {
+          var converterFn = attributeConverter as (value: string, op: DeltaInsertOp) => string;
+          return converterFn(attrValue, this.op);
+        } else {
+          return arr.preferSecond(item) + ':' + attrValue;
+        }
+      })
+      .filter((item: any) => item !== undefined) as string[];
+
+    const customStyles = this.getCustomCssStyles() || [];
+    if (!customStyles.length) {
+      return generatedStyles;
+    }
+
+    const overrideKeys = customStyles.map(styleKey).filter(Boolean);
+    const filteredGenerated = generatedStyles.filter(style => {
+      const key = styleKey(style);
+      return key ? overrideKeys.indexOf(key) === -1 : true;
+    });
+
+    return filteredGenerated.concat(customStyles);
   }
 
   getTagAttributes(): Array<ITagKeyValue> {
@@ -220,35 +235,54 @@ class OpToHtmlConverter {
 
     const makeAttr = this.makeAttr.bind(this);
     const customTagAttributes = this.getCustomTagAttributes();
-    const customAttr = customTagAttributes
-      ? Object.keys(this.getCustomTagAttributes()).map(k => makeAttr(k, customTagAttributes[k]))
+    const customAttrs = customTagAttributes
+      ? Object.keys(customTagAttributes).map(k => makeAttr(k, customTagAttributes[k]))
       : [];
+    const mergeWithCustomAttrs = (attrs: ITagKeyValue[]) => {
+      if (!customAttrs.length) {
+        return attrs;
+      }
+      const result = attrs.slice();
+      customAttrs.forEach(attr => {
+        const idx = result.findIndex(existing => existing.key === attr.key);
+        if (idx > -1) {
+          result[idx] = attr;
+        } else {
+          result.push(attr);
+        }
+      });
+      return result;
+    };
     var classes = this.getCssClasses();
-    var tagAttrs = classes.length ? customAttr.concat([makeAttr('class', classes.join(' '))]) : customAttr;
+    var tagAttrs: ITagKeyValue[] = classes.length ? [makeAttr('class', classes.join(' '))] : [];
 
     if (this.op.isImage()) {
       this.op.attributes.width && (tagAttrs = tagAttrs.concat(makeAttr('width', this.op.attributes.width)));
       this.op.attributes.height && (tagAttrs = tagAttrs.concat(makeAttr('height', this.op.attributes.height)));
-      return tagAttrs.concat(makeAttr('src', this.op.insert.value));
+      return mergeWithCustomAttrs(tagAttrs.concat(makeAttr('src', this.op.insert.value)));
     }
 
     if (this.op.isList() && !this.options.simpleList) {
-      return tagAttrs.concat(makeAttr('data-list', this.op.attributes.list));
+      return mergeWithCustomAttrs(tagAttrs.concat(makeAttr('data-list', this.op.attributes.list)));
     }
 
     if (this.op.isACheckList()) {
-      return tagAttrs.concat(makeAttr('data-checked', this.op.isCheckedList() ? 'true' : 'false'));
+      return mergeWithCustomAttrs(
+        tagAttrs.concat(makeAttr('data-checked', this.op.isCheckedList() ? 'true' : 'false'))
+      );
     }
 
     if (this.op.isFormula()) {
-      return tagAttrs;
+      return mergeWithCustomAttrs(tagAttrs);
     }
 
     if (this.op.isVideo()) {
-      return tagAttrs.concat(
-        makeAttr('frameborder', '0'),
-        makeAttr('allowfullscreen', 'true'),
-        makeAttr('src', this.op.insert.value)
+      return mergeWithCustomAttrs(
+        tagAttrs.concat(
+          makeAttr('frameborder', '0'),
+          makeAttr('allowfullscreen', 'true'),
+          makeAttr('src', this.op.insert.value)
+        )
       );
     }
 
@@ -265,7 +299,7 @@ class OpToHtmlConverter {
       if (mention.target) {
         tagAttrs = tagAttrs.concat(makeAttr('target', mention.target));
       }
-      return tagAttrs;
+      return mergeWithCustomAttrs(tagAttrs);
     }
 
     var styles = this.getCssStyles();
@@ -279,21 +313,21 @@ class OpToHtmlConverter {
       }
 
       if (typeof this.op.attributes['code-block'] === 'string') {
-        return tagAttrs.concat(makeAttr('data-language', this.op.attributes['code-block']));
+        return mergeWithCustomAttrs(tagAttrs.concat(makeAttr('data-language', this.op.attributes['code-block'])));
       } else {
-        return tagAttrs;
+        return mergeWithCustomAttrs(tagAttrs);
       }
     }
 
     if (this.op.isContainerBlock()) {
-      return tagAttrs;
+      return mergeWithCustomAttrs(tagAttrs);
     }
 
     if (this.op.isLink()) {
       tagAttrs = tagAttrs.concat(this.getLinkAttrs());
     }
 
-    return tagAttrs;
+    return mergeWithCustomAttrs(tagAttrs);
   }
 
   makeAttr(k: string, v: string): ITagKeyValue {
