@@ -19,9 +19,11 @@ describe('Grouper', function () {
     ];
     it('should return ops grouped by group type', function () {
       var act = Grouper.pairOpsWithTheirBlock(ops);
+      // Each \n is a block boundary in Quill Delta, so "hello\n" and "how are you?\n" form separate InlineGroups.
       var exp = [
         new VideoItem(ops[0]),
-        new InlineGroup([ops[1], ops[2], ops[3], ops[4]]),
+        new InlineGroup([ops[1], ops[2]]),
+        new InlineGroup([ops[3], ops[4]]),
         new BlockGroup(ops[6], [ops[5]]),
       ];
       assert.deepEqual(act, exp);

@@ -72,6 +72,12 @@ describe('QuillDeltaToHtmlConverter', function () {
       assert.equal(html.indexOf('<pre>this is code') > -1, true, html);
     });
 
+    it('should render each \\n as block boundary (e.g. {"insert": "\\n\\n"} as two empty paragraphs)', function () {
+      var qdc = new QuillDeltaToHtmlConverter([{ insert: '\n\n' }], { paragraphTag: 'p' });
+      var html = qdc.convert();
+      assert.equal(html, '<p><br/></p><p><br/></p>');
+    });
+
     it('should render mention', function () {
       let ops = [
         {

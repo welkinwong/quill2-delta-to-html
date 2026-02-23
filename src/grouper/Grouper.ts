@@ -9,7 +9,8 @@ class Grouper {
     const canBeInBlock = (op: DeltaInsertOp) => {
       return !(op.isJustNewline() || op.isCustomEmbedBlock() || op.isVideo() || op.isContainerBlock());
     };
-    const isInlineData = (op: DeltaInsertOp) => op.isInline();
+    // Newline ops are block boundaries in Quill Delta; don't group them with preceding inlines.
+    const isInlineData = (op: DeltaInsertOp) => op.isInline() && !op.isJustNewline();
 
     let lastInd = ops.length - 1;
     let opsSlice: IArraySlice;
