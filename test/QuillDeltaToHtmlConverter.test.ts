@@ -493,6 +493,38 @@ describe('QuillDeltaToHtmlConverter', function () {
       assert.equal(html, '<p>hello my friend!</p><div>how r u?</div>');
     });
 
+    it('should apply inline formats to custom inline embeds', () => {
+      let ops = [
+        { insert: { myblot: 'id-1' }, attributes: { bold: true, italic: true } },
+        { insert: { myblot: 'id-2' }, attributes: { link: 'https://example.com', underline: true } },
+      ];
+      let qdc = new QuillDeltaToHtmlConverter(ops);
+      qdc.renderCustomWith(op => {
+        if (op.insert.type === 'myblot') {
+          return `<span data-myblot="${op.insert.value}"></span>`;
+        }
+        return '';
+      });
+      let html = qdc.convert();
+      assert.equal(
+        html,
+        '<p><strong><em><span data-myblot="id-1"></span></em></strong><u><a href="https://example.com" target="_blank"><span data-myblot="id-2"></span></a></u></p>'
+      );
+    });
+
+    it('should keep custom inline embeds unchanged when no inline formats are provided', () => {
+      let ops = [{ insert: { myblot: 'id-1' } }];
+      let qdc = new QuillDeltaToHtmlConverter(ops);
+      qdc.renderCustomWith(op => {
+        if (op.insert.type === 'myblot') {
+          return `<span data-myblot="${op.insert.value}"></span>`;
+        }
+        return '';
+      });
+      let html = qdc.convert();
+      assert.equal(html, '<p><span><span data-myblot="id-1"></span></span></p>');
+    });
+
     it('should render custom insert types in code blocks with given renderer', () => {
       let ops = [
         { insert: { colonizer: ':' } },

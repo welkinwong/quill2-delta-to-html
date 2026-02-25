@@ -229,7 +229,7 @@ class OpToHtmlConverter {
   }
 
   getTagAttributes(): Array<ITagKeyValue> {
-    if (this.op.attributes.code && !this.op.isLink()) {
+    if (this.op.attributes.code && !(this.op.isLink() || this.op.isCustomEmbedLink())) {
       return [];
     }
 
@@ -323,7 +323,7 @@ class OpToHtmlConverter {
       return mergeWithCustomAttrs(tagAttrs);
     }
 
-    if (this.op.isLink()) {
+    if (this.op.isLink() || this.op.isCustomEmbedLink()) {
       tagAttrs = tagAttrs.concat(this.getLinkAttrs());
     }
 
@@ -387,6 +387,39 @@ class OpToHtmlConverter {
 
     // embeds
     if (!this.op.isText()) {
+      if (this.op.isCustomEmbed()) {
+        const inlineTags = [
+          ['code'],
+          ['script'],
+          ['bold', 'strong'],
+          ['italic', 'em'],
+          ['strike', 's'],
+          ['underline', 'u'],
+          ['link', 'a'],
+        ];
+        const customTagsMap = Object.keys(attrs).reduce((res, it) => {
+          const customTag = this.getCustomTag(it);
+          if (customTag) {
+            res[it] = customTag;
+          }
+          return res;
+        }, {} as any);
+        const tags = [
+          ...inlineTags.filter((item: string[]) => !!attrs[item[0]]),
+          ...Object.keys(customTagsMap)
+            .filter(t => !inlineTags.some(it => it[0] == t))
+            .map(t => [t, customTagsMap[t]]),
+        ].map(item => {
+          return customTagsMap[item[0]]
+            ? customTagsMap[item[0]]
+            : item[0] === 'script'
+            ? attrs[item[0]] === ScriptType.Sub
+              ? 'sub'
+              : 'sup'
+            : arr.preferSecond(item)!;
+        });
+        return tags;
+      }
       return [
         this.op.isVideo() ? 'iframe' : this.op.isImage() ? 'img' : 'span', // formula
       ];

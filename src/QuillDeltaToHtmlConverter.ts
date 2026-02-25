@@ -365,8 +365,10 @@ class QuillDeltaToHtmlConverter {
 
   _renderInline(op: DeltaInsertOp, contextOp: DeltaInsertOp | null) {
     if (op.isCustomEmbed()) {
-      const content = this._renderCustom(op, contextOp);
-      return { openingTags: [], closingTags: [], content } as IHtmlParts;
+      const converter = new OpToHtmlConverter(op, this.converterOptions);
+      const parts = converter.getHtmlParts();
+      parts.content = this._renderCustom(op, contextOp);
+      return parts;
     }
     var converter = new OpToHtmlConverter(op, this.converterOptions);
 

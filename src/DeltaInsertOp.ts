@@ -151,6 +151,10 @@ class DeltaInsertOp {
     return this.insert instanceof InsertDataCustom;
   }
 
+  isCustomEmbedLink() {
+    return this.isCustomEmbed() && !!this.attributes.link;
+  }
+
   isCustomEmbedBlock() {
     return this.isCustomEmbed() && !!this.attributes.renderAsBlock;
   }
