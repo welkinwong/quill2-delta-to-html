@@ -427,10 +427,12 @@ class OpToHtmlConverter {
 
     // blocks
     var positionTag = this.options.paragraphTag || 'p';
+    const codeBlockTag = this.options.simpleCodeBlock ? 'pre' : 'div';
 
     var blocks = [
       ['blockquote'],
       ['list', this.options.listItemTag],
+      ['code-block', codeBlockTag],
       ['header'],
       ['align', positionTag],
       ['direction', positionTag],
