@@ -111,11 +111,24 @@ class OpToHtmlConverter {
     let beginTags = [],
       endTags = [];
     const isImageLink = (tag: any) => tag === 'img' && !!this.op.attributes.link;
+    const isLinkOp = this.op.isLink() || this.op.isCustomEmbedLink();
+
+    let linkAttrs: Array<ITagKeyValue> = [];
+    if (isLinkOp && tags.length > 1 && tags[0] !== 'a') {
+      linkAttrs = this.getLinkAttrs();
+      const linkKeys = new Set(linkAttrs.map(a => a.key));
+      attrs = attrs.filter(a => !linkKeys.has(a.key));
+    }
+
     for (var tag of tags) {
       if (isImageLink(tag)) {
         beginTags.push(makeStartTag('a', this.getLinkAttrs()));
       }
-      beginTags.push(makeStartTag(tag, attrs));
+      if (tag === 'a' && linkAttrs.length) {
+        beginTags.push(makeStartTag(tag, linkAttrs));
+      } else {
+        beginTags.push(makeStartTag(tag, attrs));
+      }
       endTags.push(tag === 'img' ? '' : makeEndTag(tag));
       if (isImageLink(tag)) {
         endTags.push(makeEndTag('a'));
@@ -346,7 +359,6 @@ class OpToHtmlConverter {
     let rel = this.op.attributes.rel || relForAll;
 
     return tagAttrs
-      .concat(this.makeAttr('class', this.prefixClass('link')))
       .concat(this.makeAttr('href', this.op.attributes.link!))
       .concat(target ? this.makeAttr('target', target) : [])
       .concat(rel ? this.makeAttr('rel', rel) : []);
