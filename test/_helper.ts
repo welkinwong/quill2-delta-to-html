@@ -1,5 +1,5 @@
 function callWhenAlltrue(statuses: boolean[], cb: any) {
-  var interval: NodeJS.Timer;
+  var interval: ReturnType<typeof setInterval>;
   interval = setInterval(function () {
     var isdone = statuses.reduce((pv: any, v: any) => pv && v, true);
 
@@ -11,7 +11,7 @@ function callWhenAlltrue(statuses: boolean[], cb: any) {
 }
 
 function callWhenXEqualY({ x, y }: { x: any; y: any }, cb: any) {
-  var interval: NodeJS.Timer;
+  var interval: ReturnType<typeof setInterval>;
   interval = setInterval(function () {
     var isdone = x === y;
     if (isdone) {
