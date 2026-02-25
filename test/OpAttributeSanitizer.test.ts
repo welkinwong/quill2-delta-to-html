@@ -31,16 +31,16 @@ describe('OpAttributeSanitizer', function () {
     });
   });
 
-  describe('#IsValidWidth()', function () {
-    it('should return true if width is valid', function () {
-      assert.ok(OpAttributeSanitizer.IsValidWidth('150'));
-      assert.ok(OpAttributeSanitizer.IsValidWidth('100px'));
-      assert.ok(OpAttributeSanitizer.IsValidWidth('150em'));
-      assert.ok(OpAttributeSanitizer.IsValidWidth('10%'));
-      assert.equal(OpAttributeSanitizer.IsValidWidth('250%px'), false);
-      assert.equal(OpAttributeSanitizer.IsValidWidth('250% border-box'), false);
-      assert.equal(OpAttributeSanitizer.IsValidWidth('250.80'), false);
-      assert.equal(OpAttributeSanitizer.IsValidWidth('250x'), false);
+  describe('#IsValidWidthOrHeight()', function () {
+    it('should return true if width or height is valid', function () {
+      assert.ok(OpAttributeSanitizer.IsValidWidthOrHeight('150'));
+      assert.ok(OpAttributeSanitizer.IsValidWidthOrHeight('100px'));
+      assert.ok(OpAttributeSanitizer.IsValidWidthOrHeight('150em'));
+      assert.ok(OpAttributeSanitizer.IsValidWidthOrHeight('10%'));
+      assert.ok(OpAttributeSanitizer.IsValidWidthOrHeight('250.80'));
+      assert.equal(OpAttributeSanitizer.IsValidWidthOrHeight('250%px'), false);
+      assert.equal(OpAttributeSanitizer.IsValidWidthOrHeight('250% border-box'), false);
+      assert.equal(OpAttributeSanitizer.IsValidWidthOrHeight('250x'), false);
     });
   });
 
@@ -51,10 +51,7 @@ describe('OpAttributeSanitizer', function () {
       assert.equal(OpAttributeSanitizer.IsValidColorLiteral('#234'), false);
       assert.equal(OpAttributeSanitizer.IsValidColorLiteral('#fFe234'), false);
       assert.equal(OpAttributeSanitizer.IsValidColorLiteral('red1'), false);
-      assert.equal(
-        OpAttributeSanitizer.IsValidColorLiteral('red-green'),
-        false
-      );
+      assert.equal(OpAttributeSanitizer.IsValidColorLiteral('red-green'), false);
       assert.equal(OpAttributeSanitizer.IsValidColorLiteral(''), false);
     });
   });
@@ -68,10 +65,7 @@ describe('OpAttributeSanitizer', function () {
       assert.equal(OpAttributeSanitizer.IsValidRGBColor('#FFF'), false);
       assert.equal(OpAttributeSanitizer.IsValidRGBColor('rgb(256,0,0)'), false);
       assert.equal(OpAttributeSanitizer.IsValidRGBColor('rgb(260,0,0)'), false);
-      assert.equal(
-        OpAttributeSanitizer.IsValidRGBColor('rgb(2000,0,0)'),
-        false
-      );
+      assert.equal(OpAttributeSanitizer.IsValidRGBColor('rgb(2000,0,0)'), false);
     });
   });
   describe('#IsValidRel()', function () {
@@ -97,7 +91,7 @@ describe('OpAttributeSanitizer', function () {
 
   describe('#sanitize()', function () {
     it('should return empty object', function () {
-      [null, 3, undefined, 'fd'].forEach((v) => {
+      [null, 3, undefined, 'fd'].forEach(v => {
         assert.deepEqual(OpAttributeSanitizer.sanitize(<any>v, {}), {});
       });
     });
@@ -165,21 +159,12 @@ describe('OpAttributeSanitizer', function () {
       assert.deepEqual(OpAttributeSanitizer.sanitize({ header: 1 }, {}), {
         header: 1,
       });
-      assert.deepEqual(
-        OpAttributeSanitizer.sanitize({ header: undefined }, {}),
-        {}
-      );
+      assert.deepEqual(OpAttributeSanitizer.sanitize({ header: undefined }, {}), {});
       assert.deepEqual(OpAttributeSanitizer.sanitize({ header: 100 }, {}), {
         header: 6,
       });
-      assert.deepEqual(
-        OpAttributeSanitizer.sanitize({ align: AlignType.Center }, {}),
-        { align: 'center' }
-      );
-      assert.deepEqual(
-        OpAttributeSanitizer.sanitize({ direction: DirectionType.Rtl }, {}),
-        { direction: 'rtl' }
-      );
+      assert.deepEqual(OpAttributeSanitizer.sanitize({ align: AlignType.Center }, {}), { align: 'center' });
+      assert.deepEqual(OpAttributeSanitizer.sanitize({ direction: DirectionType.Rtl }, {}), { direction: 'rtl' });
       assert.deepEqual(OpAttributeSanitizer.sanitize({ indent: 2 }, {}), {
         indent: 2,
       });

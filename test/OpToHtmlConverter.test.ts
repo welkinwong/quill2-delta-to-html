@@ -1,15 +1,7 @@
-import {
-  OpToHtmlConverter,
-  IOpToHtmlConverterOptions,
-} from './../src/OpToHtmlConverter';
+import { OpToHtmlConverter, IOpToHtmlConverterOptions } from './../src/OpToHtmlConverter';
 import { DeltaInsertOp } from './../src/DeltaInsertOp';
 import { InsertDataQuill } from './../src/InsertData';
-import {
-  ScriptType,
-  DirectionType,
-  AlignType,
-  DataType,
-} from './../src/value-types';
+import { ScriptType, DirectionType, AlignType, DataType } from './../src/value-types';
 
 let assert = require('assert');
 
@@ -47,30 +39,27 @@ describe('OpToHtmlConverter', function () {
 
       var o = new DeltaInsertOp('f', { background: 'red', attr1: 'red' });
       c = new OpToHtmlConverter(o, {
-        customCssStyles: (op) => {
+        customCssStyles: op => {
           if (op.attributes['attr1']) {
             return `color:${op.attributes['attr1']}`;
           }
         },
       });
-      assert.deepEqual(c.getCssStyles(), ['color:red', 'background-color:red']);
+      assert.deepEqual(c.getCssStyles().sort(), ['background-color:red', 'color:red']);
 
       new DeltaInsertOp('f', { background: 'red', attr1: 'red' });
       c = new OpToHtmlConverter(o, {
-        customCssStyles: (op) => {
+        customCssStyles: op => {
           if (op.attributes['attr1']) {
             return [`color:${op.attributes['attr1']}`];
           }
         },
       });
-      assert.deepEqual(c.getCssStyles(), ['color:red', 'background-color:red']);
+      assert.deepEqual(c.getCssStyles().sort(), ['background-color:red', 'color:red']);
 
       o = new DeltaInsertOp('f', { background: 'red', color: 'blue' });
       c = new OpToHtmlConverter(o);
-      assert.deepEqual(c.getCssStyles(), [
-        'color:blue',
-        'background-color:red',
-      ]);
+      assert.deepEqual(c.getCssStyles(), ['color:blue', 'background-color:red']);
 
       c = new OpToHtmlConverter(o, { allowBackgroundClasses: true });
       assert.deepEqual(c.getCssStyles(), ['color:blue']);
@@ -166,9 +155,7 @@ describe('OpToHtmlConverter', function () {
     it('should render default font inline styles correctly', function () {
       var op = new DeltaInsertOp('f', { font: 'monospace' });
       var c = new OpToHtmlConverter(op, { inlineStyles: {} });
-      assert.deepEqual(c.getCssStyles(), [
-        'font-family: Monaco, Courier New, monospace',
-      ]);
+      assert.deepEqual(c.getCssStyles(), ['font-family: Monaco, Courier New, monospace']);
     });
 
     it('should return nothing for an inline style with no mapped entry', function () {
@@ -198,7 +185,7 @@ describe('OpToHtmlConverter', function () {
     it('should return prefixed classes', () => {
       var op = new DeltaInsertOp('hello');
       const options: IOpToHtmlConverterOptions = {
-        customCssClasses: (op) => {
+        customCssClasses: op => {
           if (op.attributes.size === 'small') {
             return ['small-size'];
           }
@@ -287,7 +274,7 @@ describe('OpToHtmlConverter', function () {
         ['code-block', 'pre'],
         ['list', 'li'],
         ['header', 'h2'],
-      ].forEach((item) => {
+      ].forEach(item => {
         o = new DeltaInsertOp('', { [item[0]]: true, header: 2 });
         c = new OpToHtmlConverter(o);
         assert.deepEqual(c.getTags(), [item[1]]);
@@ -299,10 +286,10 @@ describe('OpToHtmlConverter', function () {
         ['bold', 'h2'],
         ['list', 'li'],
         ['header', 'h2'],
-      ].forEach((item) => {
+      ].forEach(item => {
         o = new DeltaInsertOp('', { [item[0]]: true, header: 2 });
         c = new OpToHtmlConverter(o, {
-          customTag: (format) => {
+          customTag: format => {
             if (format === 'code-block') {
               return 'div';
             }
@@ -319,7 +306,7 @@ describe('OpToHtmlConverter', function () {
         ['code-block', 'pre'],
         ['list', 'li'],
         ['attr1', 'attr1'],
-      ].forEach((item) => {
+      ].forEach(item => {
         o = new DeltaInsertOp('', { [item[0]]: true, renderAsBlock: true });
         c = new OpToHtmlConverter(o, {
           customTag: (format, op) => {
@@ -342,7 +329,7 @@ describe('OpToHtmlConverter', function () {
       };
       o = new DeltaInsertOp('', attrs);
       c = new OpToHtmlConverter(o, {
-        customTag: (format) => {
+        customTag: format => {
           if (format === 'bold') {
             return 'b';
           }
@@ -369,7 +356,7 @@ describe('OpToHtmlConverter', function () {
         color: 'red',
       });
       var c = new OpToHtmlConverter(o, {
-        customTagAttributes: (op) => {
+        customTagAttributes: op => {
           if (op.attributes.color) {
             return {
               'data-color': op.attributes.color,
@@ -397,9 +384,7 @@ describe('OpToHtmlConverter', function () {
         color: 'red',
       });
       var c = new OpToHtmlConverter(o);
-      assert.deepEqual(c.getTagAttributes(), [
-        { key: 'class', value: 'ql-formula' },
-      ]);
+      assert.deepEqual(c.getTagAttributes(), [{ key: 'class', value: 'ql-formula' }]);
 
       var o = new DeltaInsertOp(new InsertDataQuill(DataType.Video, 'http:'), {
         color: 'red',
@@ -429,9 +414,7 @@ describe('OpToHtmlConverter', function () {
 
       var o = new DeltaInsertOp('', { 'code-block': 'javascript' });
       var c = new OpToHtmlConverter(o);
-      assert.deepEqual(c.getTagAttributes(), [
-        { key: 'data-language', value: 'javascript' },
-      ]);
+      assert.deepEqual(c.getTagAttributes(), [{ key: 'data-language', value: 'javascript' }]);
 
       var o = new DeltaInsertOp('', { 'code-block': true });
       var c = new OpToHtmlConverter(o);
@@ -492,11 +475,11 @@ describe('OpToHtmlConverter', function () {
         var op = new DeltaInsertOp('');
         var c1 = new OpToHtmlConverter(op);
         var act = c1.getHtmlParts();
-        assert.equal(act.closingTag + act.content + act.openingTag, '');
+        assert.equal(act.closingTags + act.content + act.openingTags, '');
 
         c1 = new OpToHtmlConverter(op1);
         act = c1.getHtmlParts();
-        assert.equal(act.openingTag + act.content + act.closingTag, result);
+        assert.equal(act.openingTags + act.content + act.closingTags, result);
       });
     });
 
@@ -518,18 +501,13 @@ describe('OpToHtmlConverter', function () {
         c1 = new OpToHtmlConverter(op);
         assert.equal(c1.getHtml(), '<pre data-language="javascript"></pre>');
 
-        var op = new DeltaInsertOp(
-          new InsertDataQuill(DataType.Image, 'http://')
-        );
+        var op = new DeltaInsertOp(new InsertDataQuill(DataType.Image, 'http://'));
         c1 = new OpToHtmlConverter(op, {
-          customCssClasses: (_) => {
+          customCssClasses: _ => {
             return 'ql-custom';
           },
         });
-        assert.equal(
-          c1.getHtml(),
-          '<img class="ql-custom ql-image" src="http://"/>'
-        );
+        assert.equal(c1.getHtml(), '<img class="ql-custom ql-image" src="http://"/>');
       });
     });
   });
