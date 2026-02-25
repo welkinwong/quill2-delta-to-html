@@ -1,7 +1,7 @@
 import { OpToHtmlConverter, IOpToHtmlConverterOptions } from './../src/OpToHtmlConverter';
 import { DeltaInsertOp } from './../src/DeltaInsertOp';
 import { InsertDataQuill } from './../src/InsertData';
-import { ScriptType, DirectionType, AlignType, DataType } from './../src/value-types';
+import { ScriptType, DirectionType, AlignType, DataType, ListType } from './../src/value-types';
 
 let assert = require('assert');
 
@@ -263,15 +263,15 @@ describe('OpToHtmlConverter', function () {
         ['image', 'img'],
         ['video', 'iframe'],
         ['formula', 'span'],
-      ].forEach((item: DataType[]) => {
-        o = new DeltaInsertOp(new InsertDataQuill(item[0], ''));
+      ].forEach(item => {
+        o = new DeltaInsertOp(new InsertDataQuill(item[0] as DataType, ''));
         c = new OpToHtmlConverter(o);
         assert.deepEqual(c.getTags(), [item[1]]);
       });
 
       [
         ['blockquote', 'blockquote'],
-        ['code-block', 'pre'],
+        ['code-block', 'div'],
         ['list', 'li'],
         ['header', 'h2'],
       ].forEach(item => {
@@ -303,7 +303,7 @@ describe('OpToHtmlConverter', function () {
 
       [
         ['blockquote', 'blockquote'],
-        ['code-block', 'pre'],
+        ['code-block', 'div'],
         ['list', 'li'],
         ['attr1', 'attr1'],
       ].forEach(item => {
@@ -317,6 +317,10 @@ describe('OpToHtmlConverter', function () {
         });
         assert.deepEqual(c.getTags(), [item[1]]);
       });
+
+      o = new DeltaInsertOp('', { 'code-block': true });
+      c = new OpToHtmlConverter(o, { simpleCodeBlock: true });
+      assert.deepEqual(c.getTags(), ['pre']);
 
       var attrs = {
         link: 'http',
@@ -338,7 +342,7 @@ describe('OpToHtmlConverter', function () {
           }
         },
       });
-      assert.deepEqual(c.getTags(), ['a', 'sub', 'b', 'em', 's', 'u', 'attr2']);
+      assert.deepEqual(c.getTags(), ['sub', 'b', 'em', 's', 'u', 'a', 'attr2']);
     });
   });
 
@@ -365,9 +369,9 @@ describe('OpToHtmlConverter', function () {
         },
       });
       assert.deepEqual(c.getTagAttributes(), [
-        { key: 'data-color', value: 'red' },
         { key: 'class', value: 'ql-image' },
         { key: 'src', value: 'http:' },
+        { key: 'data-color', value: 'red' },
       ]);
 
       var o = new DeltaInsertOp(new InsertDataQuill(DataType.Image, 'http:'), {
@@ -414,10 +418,25 @@ describe('OpToHtmlConverter', function () {
 
       var o = new DeltaInsertOp('', { 'code-block': 'javascript' });
       var c = new OpToHtmlConverter(o);
-      assert.deepEqual(c.getTagAttributes(), [{ key: 'data-language', value: 'javascript' }]);
+      assert.deepEqual(c.getTagAttributes(), [
+        { key: 'class', value: 'ql-code-block' },
+        { key: 'data-language', value: 'javascript' },
+      ]);
 
       var o = new DeltaInsertOp('', { 'code-block': true });
       var c = new OpToHtmlConverter(o);
+      assert.deepEqual(c.getTagAttributes(), [{ key: 'class', value: 'ql-code-block' }]);
+
+      o = new DeltaInsertOp('', { 'code-block': true });
+      c = new OpToHtmlConverter(o, { simpleCodeBlock: true });
+      assert.deepEqual(c.getTagAttributes(), []);
+
+      o = new DeltaInsertOp('', { list: ListType.Ordered });
+      c = new OpToHtmlConverter(o);
+      assert.deepEqual(c.getTagAttributes(), [{ key: 'data-list', value: 'ordered' }]);
+
+      o = new DeltaInsertOp('', { list: ListType.Ordered });
+      c = new OpToHtmlConverter(o, { simpleList: true });
       assert.deepEqual(c.getTagAttributes(), []);
     });
   });
@@ -462,12 +481,12 @@ describe('OpToHtmlConverter', function () {
     var op1 = new DeltaInsertOp('aaa', attributes);
     var c1 = new OpToHtmlConverter(op1);
     var result = [
-      '<a class="ql-font-verdana ql-size-small"',
-      ' style="color:red;background-color:#fff" href="http://">',
-      '<sup>',
-      '<strong><em><s><u>aaa</u></s></em></strong>',
+      '<sup class="ql-font-verdana ql-size-small"',
+      ' style="color:red;background-color:#fff">',
+      '<strong><em><s><u>',
+      '<a href="http://">aaa</a>',
+      '</u></s></em></strong>',
       '</sup>',
-      '</a>',
     ].join('');
 
     describe('getHtmlParts()', function () {
@@ -475,11 +494,11 @@ describe('OpToHtmlConverter', function () {
         var op = new DeltaInsertOp('');
         var c1 = new OpToHtmlConverter(op);
         var act = c1.getHtmlParts();
-        assert.equal(act.closingTags + act.content + act.openingTags, '');
+        assert.equal(act.closingTags.join('') + act.content + act.openingTags.join(''), '');
 
         c1 = new OpToHtmlConverter(op1);
         act = c1.getHtmlParts();
-        assert.equal(act.openingTags + act.content + act.closingTags, result);
+        assert.equal(act.openingTags.join('') + act.content + act.closingTags.join(''), result);
       });
     });
 
@@ -499,6 +518,9 @@ describe('OpToHtmlConverter', function () {
 
         var op = new DeltaInsertOp('\n', { 'code-block': 'javascript' });
         c1 = new OpToHtmlConverter(op);
+        assert.equal(c1.getHtml(), '<div class="ql-code-block" data-language="javascript"></div>');
+
+        c1 = new OpToHtmlConverter(op, { simpleCodeBlock: true });
         assert.equal(c1.getHtml(), '<pre data-language="javascript"></pre>');
 
         var op = new DeltaInsertOp(new InsertDataQuill(DataType.Image, 'http://'));
