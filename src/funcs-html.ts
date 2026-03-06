@@ -67,7 +67,7 @@ function encodeMappings(mtype: EncodeTarget) {
     return maps.filter(([v, _]) => v.indexOf('(') === -1 && v.indexOf(')') === -1);
   } else {
     // for url
-    return maps.filter(([v, _]) => v.indexOf('/') === -1);
+    return maps.filter(([v, _]) => v.indexOf(' ') === -1 && v.indexOf('/') === -1);
   }
 }
 function encodeMapping(str: string, mapping: string[]) {
