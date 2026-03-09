@@ -47,7 +47,9 @@ describe('html module', function () {
 
   describe('encodeHtml()', function () {
     it('should encode < > & " \' / characters', function () {
-      var act = encodeHtml('hello"my<lovely\'/>&amp;friend&here()', false);
+      var act = encodeHtml('hello"my<lovely\'/>&amp;friend&here()', {
+        preventDoubleEncoding: false,
+      });
       assert.equal(
         act,
         'hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;amp;friend&amp;here()'
@@ -58,6 +60,9 @@ describe('html module', function () {
         act,
         'hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;friend&amp;here()'
       );
+
+      act = encodeHtml('hello my friend', { encodeSpace: false });
+      assert.equal(act, 'hello my friend');
     });
   });
 
@@ -71,7 +76,7 @@ describe('html module', function () {
   });
 
   describe('encodeLink()', function () {
-    it('should encode link', function () {
+    it('should encode link without encoding spaces', function () {
       var act = encodeLink('http://www.yahoo.com/?a=b&c=<>( )"\'');
       assert.equal(
         act,

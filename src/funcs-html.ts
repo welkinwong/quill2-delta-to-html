@@ -2,6 +2,10 @@ interface ITagKeyValue {
   key: string;
   value?: string;
 }
+interface IEncodeHtmlOptions {
+  preventDoubleEncoding?: boolean;
+  encodeSpace?: boolean;
+}
 
 enum EncodeTarget {
   Html = 0,
@@ -38,11 +42,14 @@ function decodeHtml(str: string) {
   return encodeMappings(EncodeTarget.Html).reduce(decodeMapping, str);
 }
 
-function encodeHtml(str: string, preventDoubleEncoding = true) {
+function encodeHtml(
+  str: string,
+  { preventDoubleEncoding = true, encodeSpace = true }: IEncodeHtmlOptions = {}
+) {
   if (preventDoubleEncoding) {
     str = decodeHtml(str);
   }
-  return encodeMappings(EncodeTarget.Html).reduce(encodeMapping, str);
+  return encodeMappings(EncodeTarget.Html, encodeSpace).reduce(encodeMapping, str);
 }
 
 function encodeLink(str: string) {
@@ -51,7 +58,7 @@ function encodeLink(str: string) {
   return linkMaps.reduce(encodeMapping, decoded);
 }
 
-function encodeMappings(mtype: EncodeTarget) {
+function encodeMappings(mtype: EncodeTarget, encodeSpace = true) {
   let maps = [
     ['&', '&amp;'],
     [' ', '&nbsp;'],
@@ -64,7 +71,9 @@ function encodeMappings(mtype: EncodeTarget) {
     ['\\)', '&#41;'],
   ];
   if (mtype === EncodeTarget.Html) {
-    return maps.filter(([v, _]) => v.indexOf('(') === -1 && v.indexOf(')') === -1);
+    return maps.filter(
+      ([v, _]) => (encodeSpace || v.indexOf(' ') === -1) && v.indexOf('(') === -1 && v.indexOf(')') === -1
+    );
   } else {
     // for url
     return maps.filter(([v, _]) => v.indexOf(' ') === -1 && v.indexOf('/') === -1);

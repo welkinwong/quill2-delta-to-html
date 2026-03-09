@@ -48,6 +48,7 @@ interface IOpToHtmlConverterOptions {
   simpleCodeBlock?: boolean;
   simpleList?: boolean;
   encodeHtml?: boolean;
+  encodeSpace?: boolean;
   listItemTag?: string;
   paragraphTag?: string;
   linkRel?: string;
@@ -77,6 +78,7 @@ class OpToHtmlConverter {
         classPrefix: 'ql',
         inlineStyles: undefined,
         encodeHtml: true,
+        encodeSpace: true,
         listItemTag: 'li',
         paragraphTag: 'p',
       },
@@ -156,7 +158,13 @@ class OpToHtmlConverter {
 
     var content = this.op.isFormula() || this.op.isText() ? this.op.insert.value : '';
 
-    return (this.options.encodeHtml && encodeHtml(content)) || content;
+    return (
+      (this.options.encodeHtml &&
+        encodeHtml(content, {
+          encodeSpace: this.options.encodeSpace !== false,
+        })) ||
+      content
+    );
   }
 
   getCssClasses(): string[] {
@@ -425,10 +433,10 @@ class OpToHtmlConverter {
           return customTagsMap[item[0]]
             ? customTagsMap[item[0]]
             : item[0] === 'script'
-            ? attrs[item[0]] === ScriptType.Sub
-              ? 'sub'
-              : 'sup'
-            : arr.preferSecond(item)!;
+              ? attrs[item[0]] === ScriptType.Sub
+                ? 'sub'
+                : 'sup'
+              : arr.preferSecond(item)!;
         });
         return tags;
       }
@@ -493,10 +501,10 @@ class OpToHtmlConverter {
       return customTagsMap[item[0]]
         ? customTagsMap[item[0]]
         : item[0] === 'script'
-        ? attrs[item[0]] === ScriptType.Sub
-          ? 'sub'
-          : 'sup'
-        : arr.preferSecond(item)!;
+          ? attrs[item[0]] === ScriptType.Sub
+            ? 'sub'
+            : 'sup'
+          : arr.preferSecond(item)!;
     });
   }
 }

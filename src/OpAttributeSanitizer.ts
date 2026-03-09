@@ -45,6 +45,7 @@ interface IUrlSanitizerFn {
 }
 interface IOpAttributeSanitizerOptions {
   urlSanitizer?: IUrlSanitizerFn;
+  encodeSpace?: boolean;
 }
 
 class OpAttributeSanitizer {

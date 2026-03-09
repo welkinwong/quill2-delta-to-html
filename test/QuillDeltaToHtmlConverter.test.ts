@@ -145,6 +145,21 @@ describe('QuillDeltaToHtmlConverter', function () {
         '<p><a href="#" target="_blank" rel="nofollow noopener">external&nbsp;link</a><a href="#" target="_blank" rel="noopener noreferrer">internal&nbsp;link</a></p>'
       );
     });
+    it('should not change link href spaces and only affect content spaces', function () {
+      let ops = [{ attributes: { link: 'http://abc.com/a b' }, insert: 'test value' }];
+
+      let qdc = new QuillDeltaToHtmlConverter(ops);
+      assert.equal(
+        qdc.convert(),
+        '<p><a href="http://abc.com/a b" target="_blank" rel="noopener noreferrer">test&nbsp;value</a></p>'
+      );
+
+      qdc = new QuillDeltaToHtmlConverter(ops, { encodeSpace: false });
+      assert.equal(
+        qdc.convert(),
+        '<p><a href="http://abc.com/a b" target="_blank" rel="noopener noreferrer">test value</a></p>'
+      );
+    });
     it('should render image and image links', function () {
       let ops = [
         { insert: { image: 'http://yahoo.com/abc.jpg' } },
@@ -788,6 +803,13 @@ describe('QuillDeltaToHtmlConverter', function () {
         qdc = new QuillDeltaToHtmlConverter([ops[0], ops[1]], { simpleCodeBlock: true });
         html = qdc.convert();
         assert.equal(html, '<pre>line&nbsp;1</pre>');
+
+        qdc = new QuillDeltaToHtmlConverter(ops, { simpleCodeBlock: true, encodeSpace: false });
+        html = qdc.convert();
+        assert.equal(
+          html,
+          '<pre>line 1<br/>line 2<br/>line 3<br/>' + encodeHtml('<p>line 4</p>', { encodeSpace: false }) + '<br/>line 5</pre>'
+        );
       });
     });
 

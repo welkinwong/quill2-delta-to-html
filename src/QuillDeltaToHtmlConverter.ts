@@ -51,6 +51,7 @@ class QuillDeltaToHtmlConverter {
     this.options = obj.assign(
       {
         paragraphTag: 'p',
+        encodeSpace: true,
         encodeHtml: true,
         classPrefix: 'ql',
         inlineStyles: false,
@@ -79,6 +80,7 @@ class QuillDeltaToHtmlConverter {
 
     this.converterOptions = {
       encodeHtml: this.options.encodeHtml,
+      encodeSpace: this.options.encodeSpace,
       classPrefix: this.options.classPrefix,
       inlineStyles: inlineStyles,
       simpleCodeBlock: this.options.simpleCodeBlock,
@@ -100,12 +102,12 @@ class QuillDeltaToHtmlConverter {
     return op.isOrderedList()
       ? this.options.orderedListTag + ''
       : op.isBulletList()
-      ? this.options.bulletListTag + ''
-      : op.isCheckedList()
-      ? this.options.bulletListTag + ''
-      : op.isUncheckedList()
-      ? this.options.bulletListTag + ''
-      : '';
+        ? this.options.bulletListTag + ''
+        : op.isCheckedList()
+          ? this.options.bulletListTag + ''
+          : op.isUncheckedList()
+            ? this.options.bulletListTag + ''
+            : '';
   }
 
   getGroupedOps(): TDataGroup[] {
@@ -198,7 +200,9 @@ class QuillDeltaToHtmlConverter {
     var converter = new OpToHtmlConverter(codeBlock.item.op, this.converterOptions);
     var parts = converter.getHtmlParts();
 
-    var codeBlockElementsHtml = encodeHtml(codeBlock.item.ops.map(iop => iop.insert.value).join(''));
+    var codeBlockElementsHtml = encodeHtml(codeBlock.item.ops.map(iop => iop.insert.value).join(''), {
+      encodeSpace: this.options.encodeSpace !== false,
+    });
 
     if (this.options.simpleCodeBlock) {
       return codeBlockElementsHtml + (isLast ? '' : BrTag);
@@ -263,7 +267,9 @@ class QuillDeltaToHtmlConverter {
     if (bop.isCodeBlock()) {
       return (
         htmlParts.openingTags.join('') +
-        encodeHtml(ops.map(iop => (iop.isCustomEmbed() ? this._renderCustom(iop, bop) : iop.insert.value)).join('')) +
+        encodeHtml(ops.map(iop => (iop.isCustomEmbed() ? this._renderCustom(iop, bop) : iop.insert.value)).join(''), {
+          encodeSpace: this.options.encodeSpace !== false,
+        }) +
         htmlParts.closingTags.join('')
       );
     }
