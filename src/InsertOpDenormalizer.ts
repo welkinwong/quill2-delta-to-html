@@ -32,22 +32,23 @@ class InsertOpDenormalizer {
       return [op];
     }
 
-    let newlinedArray = str.tokenizeWithNewLines(op.insert + '');
+    const insertVal = op.insert + '';
+    if (insertVal.indexOf(NewLine) === -1) {
+      return [op];
+    }
+    let newlinedArray = str.tokenizeWithNewLines(insertVal);
 
     if (newlinedArray.length === 1) {
       return [op];
     }
 
     let nlObj = obj.assign({}, op, { insert: NewLine });
-
-    return newlinedArray.map((line: string) => {
-      if (line === NewLine) {
-        return nlObj;
-      }
-      return obj.assign({}, op, {
-        insert: line,
-      });
-    });
+    const denormalized = new Array(newlinedArray.length);
+    for (let i = 0; i < newlinedArray.length; i++) {
+      const line = newlinedArray[i];
+      denormalized[i] = line === NewLine ? nlObj : obj.assign({}, op, { insert: line });
+    }
+    return denormalized;
   }
 }
 

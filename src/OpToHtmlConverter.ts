@@ -86,6 +86,11 @@ class OpToHtmlConverter {
     );
   }
 
+  setOp(op: DeltaInsertOp): OpToHtmlConverter {
+    this.op = op;
+    return this;
+  }
+
   prefixClass(className: string): string {
     if (!this.options.classPrefix) {
       return className + '';
@@ -118,8 +123,16 @@ class OpToHtmlConverter {
     let linkAttrs: Array<ITagKeyValue> = [];
     if (isLinkOp && tags.length > 1 && tags[0] !== 'a') {
       linkAttrs = this.getLinkAttrs();
-      const linkKeys = new Set(linkAttrs.map(a => a.key));
-      attrs = attrs.filter(a => !linkKeys.has(a.key));
+      if (linkAttrs.length) {
+        attrs = attrs.filter(attr => {
+          for (let i = 0; i < linkAttrs.length; i++) {
+            if (linkAttrs[i].key === attr.key) {
+              return false;
+            }
+          }
+          return true;
+        });
+      }
     }
 
     for (var tag of tags) {
@@ -240,10 +253,10 @@ class OpToHtmlConverter {
       return generatedStyles;
     }
 
-    const overrideKeys = customStyles.map(styleKey).filter(Boolean);
+    const overrideKeys = new Set(customStyles.map(styleKey).filter(Boolean));
     const filteredGenerated = generatedStyles.filter(style => {
       const key = styleKey(style);
-      return key ? overrideKeys.indexOf(key) === -1 : true;
+      return key ? !overrideKeys.has(key) : true;
     });
 
     return filteredGenerated.concat(customStyles);
@@ -265,10 +278,15 @@ class OpToHtmlConverter {
       }
       const result = attrs.slice();
       customAttrs.forEach(attr => {
-        const idx = result.findIndex(existing => existing.key === attr.key);
-        if (idx > -1) {
-          result[idx] = attr;
-        } else {
+        let replaced = false;
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].key === attr.key) {
+            result[i] = attr;
+            replaced = true;
+            break;
+          }
+        }
+        if (!replaced) {
           result.push(attr);
         }
       });
@@ -404,6 +422,7 @@ class OpToHtmlConverter {
 
   getTags(): string[] {
     var attrs: any = this.op.attributes;
+    const hasCustomTag = !!(this.options.customTag && typeof this.options.customTag === 'function');
 
     // embeds
     if (!this.op.isText()) {
@@ -417,6 +436,17 @@ class OpToHtmlConverter {
           ['underline', 'u'],
           ['link', 'a'],
         ];
+        if (!hasCustomTag) {
+          return inlineTags
+            .filter((item: string[]) => !!attrs[item[0]])
+            .map(item => {
+              return item[0] === 'script'
+                ? attrs[item[0]] === ScriptType.Sub
+                  ? 'sub'
+                  : 'sup'
+                : arr.preferSecond(item)!;
+            });
+        }
         const customTagsMap = Object.keys(attrs).reduce((res, it) => {
           const customTag = this.getCustomTag(it);
           if (customTag) {
@@ -472,13 +502,15 @@ class OpToHtmlConverter {
     }
 
     // inlines
-    const customTagsMap = Object.keys(attrs).reduce((res, it) => {
-      const customTag = this.getCustomTag(it);
-      if (customTag) {
-        res[it] = customTag;
-      }
-      return res;
-    }, {} as any);
+    const customTagsMap = hasCustomTag
+      ? Object.keys(attrs).reduce((res, it) => {
+          const customTag = this.getCustomTag(it);
+          if (customTag) {
+            res[it] = customTag;
+          }
+          return res;
+        }, {} as any)
+      : ({} as any);
 
     // order matters https://github.com/slab/quill/blob/539cbffd0a13b18e9c65eb84dd35e6596e403158/packages/quill/src/blots/inline.ts#L8
     const inlineTags = [

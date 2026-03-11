@@ -14,24 +14,22 @@ class InsertOpsConverter {
       return [];
     }
 
-    var denormalizedOps = [].concat.apply([], deltaOps.map(InsertOpDenormalizer.denormalize));
-    var results: DeltaInsertOp[] = [];
+    const results: DeltaInsertOp[] = [];
 
-    var insertVal, attributes;
-
-    for (var op of denormalizedOps) {
-      if (!op.insert) {
-        continue;
+    for (let i = 0; i < deltaOps.length; i++) {
+      const denormalizedOps = InsertOpDenormalizer.denormalize(deltaOps[i]);
+      for (let j = 0; j < denormalizedOps.length; j++) {
+        const op = denormalizedOps[j];
+        if (!op.insert) {
+          continue;
+        }
+        const insertVal = InsertOpsConverter.convertInsertVal(op.insert, options);
+        if (!insertVal) {
+          continue;
+        }
+        const attributes = OpAttributeSanitizer.sanitize(op.attributes, options);
+        results.push(new DeltaInsertOp(insertVal, attributes));
       }
-
-      insertVal = InsertOpsConverter.convertInsertVal(op.insert, options);
-      if (!insertVal) {
-        continue;
-      }
-
-      attributes = OpAttributeSanitizer.sanitize(op.attributes, options);
-
-      results.push(new DeltaInsertOp(insertVal, attributes));
     }
     return results;
   }

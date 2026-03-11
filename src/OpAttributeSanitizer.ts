@@ -48,6 +48,29 @@ interface IOpAttributeSanitizerOptions {
   encodeSpace?: boolean;
 }
 
+const BOOLEAN_ATTRS = ['bold', 'italic', 'underline', 'strike', 'code', 'blockquote', 'code-block', 'renderAsBlock'];
+const COLOR_ATTRS = ['background', 'color'];
+const SANITIZED_ATTRS = new Set([
+  ...BOOLEAN_ATTRS,
+  ...COLOR_ATTRS,
+  'font',
+  'size',
+  'link',
+  'script',
+  'list',
+  'header',
+  'align',
+  'direction',
+  'indent',
+  'mentions',
+  'mention',
+  'width',
+  'height',
+  'target',
+  'rel',
+  'code-block',
+]);
+
 class OpAttributeSanitizer {
   static sanitize(dirtyAttrs: IOpAttributes, sanitizeOptions: IOpAttributeSanitizerOptions): IOpAttributes {
     var cleanAttrs: any = {};
@@ -55,10 +78,6 @@ class OpAttributeSanitizer {
     if (!dirtyAttrs || typeof dirtyAttrs !== 'object') {
       return cleanAttrs;
     }
-    let booleanAttrs = ['bold', 'italic', 'underline', 'strike', 'code', 'blockquote', 'code-block', 'renderAsBlock'];
-
-    let colorAttrs = ['background', 'color'];
-
     let {
       font,
       size,
@@ -78,34 +97,14 @@ class OpAttributeSanitizer {
     } = dirtyAttrs;
     let codeBlock = dirtyAttrs['code-block'];
 
-    let sanitizedAttrs = [
-      ...booleanAttrs,
-      ...colorAttrs,
-      'font',
-      'size',
-      'link',
-      'script',
-      'list',
-      'header',
-      'align',
-      'direction',
-      'indent',
-      'mentions',
-      'mention',
-      'width',
-      'height',
-      'target',
-      'rel',
-      'code-block',
-    ];
-    booleanAttrs.forEach(function (prop: string) {
+    BOOLEAN_ATTRS.forEach(function (prop: string) {
       var v = (<any>dirtyAttrs)[prop];
       if (v) {
         cleanAttrs[prop] = !!v;
       }
     });
 
-    colorAttrs.forEach(function (prop: string) {
+    COLOR_ATTRS.forEach(function (prop: string) {
       var val = (<any>dirtyAttrs)[prop];
       if (
         val &&
@@ -190,7 +189,7 @@ class OpAttributeSanitizer {
     }
     return Object.keys(dirtyAttrs).reduce((cleaned, k) => {
       // this is a custom attr, put it back
-      if (sanitizedAttrs.indexOf(k) === -1) {
+      if (!SANITIZED_ATTRS.has(k)) {
         cleaned[k] = (<any>dirtyAttrs)[k];
       }
       return cleaned;

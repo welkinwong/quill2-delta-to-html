@@ -10,26 +10,25 @@ function tokenizeWithNewLines(str: string): string[] {
     return [str];
   }
 
-  var lines = str.split(NewLine);
-
-  if (lines.length === 1) {
-    return lines;
+  if (str.indexOf(NewLine) === -1) {
+    return [str];
   }
 
-  var lastIndex = lines.length - 1;
-
-  return lines.reduce((pv: string[], line: string, ind: number) => {
-    if (ind !== lastIndex) {
-      if (line !== '') {
-        pv = pv.concat(line, NewLine);
-      } else {
-        pv.push(NewLine);
+  const tokens: string[] = [];
+  let start = 0;
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) === 10) {
+      if (i > start) {
+        tokens.push(str.slice(start, i));
       }
-    } else if (line !== '') {
-      pv.push(line);
+      tokens.push(NewLine);
+      start = i + 1;
     }
-    return pv;
-  }, []);
+  }
+  if (start < str.length) {
+    tokens.push(str.slice(start));
+  }
+  return tokens;
 }
 
 export { tokenizeWithNewLines };

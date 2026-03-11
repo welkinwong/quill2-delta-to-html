@@ -43,6 +43,7 @@ class QuillDeltaToHtmlConverter {
   private options: IQuillDeltaToHtmlConverterOptions;
   private rawDeltaOps: any[] = [];
   private converterOptions: IOpToHtmlConverterOptions;
+  private reusableOpConverter: OpToHtmlConverter | null = null;
 
   // render callbacks
   private callbacks: any = {};
@@ -148,7 +149,7 @@ class QuillDeltaToHtmlConverter {
         } else if (group instanceof VideoItem) {
           return this._renderWithCallbacks(GroupType.Video, group, () => {
             var g = <VideoItem>group;
-            var converter = new OpToHtmlConverter(g.op, this.converterOptions);
+            var converter = this._getReusableConverter(g.op);
             return converter.getHtml();
           });
         } else {
@@ -159,6 +160,14 @@ class QuillDeltaToHtmlConverter {
         }
       })
       .join('');
+  }
+
+  _getReusableConverter(op: DeltaInsertOp) {
+    if (!this.reusableOpConverter) {
+      this.reusableOpConverter = new OpToHtmlConverter(op, this.converterOptions);
+      return this.reusableOpConverter;
+    }
+    return this.reusableOpConverter.setOp(op);
   }
 
   _renderWithCallbacks(groupType: GroupType, group: TDataGroup, myRenderFn: () => string) {
@@ -197,7 +206,7 @@ class QuillDeltaToHtmlConverter {
   }
 
   _renderCodeBlockItem(codeBlock: CodeBlockItem, isLast: boolean): string {
-    var converter = new OpToHtmlConverter(codeBlock.item.op, this.converterOptions);
+    var converter = this._getReusableConverter(codeBlock.item.op);
     var parts = converter.getHtmlParts();
 
     var codeBlockElementsHtml = encodeHtml(codeBlock.item.ops.map(iop => iop.insert.value).join(''), {
@@ -221,7 +230,7 @@ class QuillDeltaToHtmlConverter {
   }
 
   _renderListItem(li: ListItem): string {
-    var converter = new OpToHtmlConverter(li.item.op, this.converterOptions);
+    var converter = this._getReusableConverter(li.item.op);
     var parts = converter.getHtmlParts();
     var prefixHtml = this.options.simpleList ? '' : '<span class="ql-ui" contenteditable="false"></span>';
     var liElementsHtml = this._renderInlines(li.item.ops, false);
@@ -245,7 +254,7 @@ class QuillDeltaToHtmlConverter {
   }
 
   _renderTableCell(cell: TableCell): string {
-    var converter = new OpToHtmlConverter(cell.item.op, this.converterOptions);
+    var converter = this._getReusableConverter(cell.item.op);
     var parts = converter.getHtmlParts();
     var cellElementsHtml = this._renderInlines(cell.item.ops, false);
     return (
@@ -261,7 +270,7 @@ class QuillDeltaToHtmlConverter {
   }
 
   _renderBlock(bop: DeltaInsertOp, ops: DeltaInsertOp[]) {
-    var converter = new OpToHtmlConverter(bop, this.converterOptions);
+    var converter = this._getReusableConverter(bop);
     var htmlParts = converter.getHtmlParts();
 
     if (bop.isCodeBlock()) {
@@ -338,7 +347,11 @@ class QuillDeltaToHtmlConverter {
 
     function renderRichNode(node: RichNode | string): string {
       if (typeof node === 'string') return node;
-      return node.openingTag + node.children.map(child => renderRichNode(child)).join('') + node.closingTag;
+      let childrenHtml = '';
+      for (let i = 0; i < node.children.length; i++) {
+        childrenHtml += renderRichNode(node.children[i]);
+      }
+      return node.openingTag + childrenHtml + node.closingTag;
     }
 
     const html = htmlParts
@@ -357,26 +370,35 @@ class QuillDeltaToHtmlConverter {
       return startParaTag + html + endParaTag;
     }
 
-    return (
-      startParaTag +
-      html
-        .split(BrTag)
-        .map(v => {
-          return v === '' ? BrTag : v;
-        })
-        .join(endParaTag + startParaTag) +
-      endParaTag
-    );
+    let segmented = '';
+    let index = 0;
+    let first = true;
+    while (index <= html.length) {
+      const brIndex = html.indexOf(BrTag, index);
+      const hasBr = brIndex !== -1;
+      const segment = hasBr ? html.slice(index, brIndex) : html.slice(index);
+      if (!first) {
+        segmented += endParaTag + startParaTag;
+      }
+      segmented += segment === '' ? BrTag : segment;
+      first = false;
+      if (!hasBr) {
+        break;
+      }
+      index = brIndex + BrTag.length;
+    }
+
+    return startParaTag + segmented + endParaTag;
   }
 
   _renderInline(op: DeltaInsertOp, contextOp: DeltaInsertOp | null) {
     if (op.isCustomEmbed()) {
-      const converter = new OpToHtmlConverter(op, this.converterOptions);
+      const converter = this._getReusableConverter(op);
       const parts = converter.getHtmlParts();
       parts.content = this._renderCustom(op, contextOp);
       return parts;
     }
-    var converter = new OpToHtmlConverter(op, this.converterOptions);
+    var converter = this._getReusableConverter(op);
 
     return converter.getHtmlParts();
   }

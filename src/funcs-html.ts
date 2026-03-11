@@ -7,27 +7,47 @@ interface IEncodeHtmlOptions {
   encodeSpace?: boolean;
 }
 
-enum EncodeTarget {
-  Html = 0,
-  Url = 1,
-}
+type EncodePair = {
+  raw: string;
+  encoded: string;
+  encodeRegex: RegExp;
+  decodeRegex: RegExp;
+};
+
+const ALL_ENCODE_PAIRS: EncodePair[] = [
+  { raw: '&', encoded: '&amp;', encodeRegex: /&/g, decodeRegex: /&amp;/g },
+  { raw: ' ', encoded: '&nbsp;', encodeRegex: / /g, decodeRegex: /&nbsp;/g },
+  { raw: '<', encoded: '&lt;', encodeRegex: /</g, decodeRegex: /&lt;/g },
+  { raw: '>', encoded: '&gt;', encodeRegex: />/g, decodeRegex: /&gt;/g },
+  { raw: '"', encoded: '&quot;', encodeRegex: /"/g, decodeRegex: /&quot;/g },
+  { raw: "'", encoded: '&#x27;', encodeRegex: /'/g, decodeRegex: /&#x27;/g },
+  { raw: '/', encoded: '&#x2F;', encodeRegex: /\//g, decodeRegex: /&#x2F;/g },
+  { raw: '(', encoded: '&#40;', encodeRegex: /\(/g, decodeRegex: /&#40;/g },
+  { raw: ')', encoded: '&#41;', encodeRegex: /\)/g, decodeRegex: /&#41;/g },
+];
+
+const HTML_ENCODE_PAIRS_WITH_SPACE = ALL_ENCODE_PAIRS.filter(pair => pair.raw !== '(' && pair.raw !== ')');
+const HTML_ENCODE_PAIRS_NO_SPACE = HTML_ENCODE_PAIRS_WITH_SPACE.filter(pair => pair.raw !== ' ');
+const URL_ENCODE_PAIRS = ALL_ENCODE_PAIRS.filter(pair => pair.raw !== ' ' && pair.raw !== '/');
 
 function makeStartTag(tag: any, attrs: ITagKeyValue | ITagKeyValue[] | undefined = undefined) {
   if (!tag) {
     return '';
   }
 
-  var attrsStr = '';
+  let attrsStr = '';
   if (attrs) {
-    var arrAttrs = ([] as ITagKeyValue[]).concat(attrs);
-    attrsStr = arrAttrs
-      .map(function (attr: any) {
-        return attr.key + (attr.value ? '="' + attr.value + '"' : '');
-      })
-      .join(' ');
+    const arrAttrs = Array.isArray(attrs) ? attrs : [attrs];
+    for (let i = 0; i < arrAttrs.length; i++) {
+      const attr = arrAttrs[i];
+      if (i > 0) {
+        attrsStr += ' ';
+      }
+      attrsStr += attr.key + (attr.value ? '="' + attr.value + '"' : '');
+    }
   }
 
-  var closing = '>';
+  let closing = '>';
   if (tag === 'img' || tag === 'br') {
     closing = '/>';
   }
@@ -39,7 +59,7 @@ function makeEndTag(tag: any = '') {
 }
 
 function decodeHtml(str: string) {
-  return encodeMappings(EncodeTarget.Html).reduce(decodeMapping, str);
+  return applyDecodeMappings(str, HTML_ENCODE_PAIRS_WITH_SPACE);
 }
 
 function encodeHtml(
@@ -49,40 +69,25 @@ function encodeHtml(
   if (preventDoubleEncoding) {
     str = decodeHtml(str);
   }
-  return encodeMappings(EncodeTarget.Html, encodeSpace).reduce(encodeMapping, str);
+  return applyEncodeMappings(str, encodeSpace ? HTML_ENCODE_PAIRS_WITH_SPACE : HTML_ENCODE_PAIRS_NO_SPACE);
 }
 
 function encodeLink(str: string) {
-  let linkMaps = encodeMappings(EncodeTarget.Url);
-  let decoded = linkMaps.reduce(decodeMapping, str);
-  return linkMaps.reduce(encodeMapping, decoded);
+  let decoded = applyDecodeMappings(str, URL_ENCODE_PAIRS);
+  return applyEncodeMappings(decoded, URL_ENCODE_PAIRS);
 }
 
-function encodeMappings(mtype: EncodeTarget, encodeSpace = true) {
-  let maps = [
-    ['&', '&amp;'],
-    [' ', '&nbsp;'],
-    ['<', '&lt;'],
-    ['>', '&gt;'],
-    ['"', '&quot;'],
-    ["'", '&#x27;'],
-    ['\\/', '&#x2F;'],
-    ['\\(', '&#40;'],
-    ['\\)', '&#41;'],
-  ];
-  if (mtype === EncodeTarget.Html) {
-    return maps.filter(
-      ([v, _]) => (encodeSpace || v.indexOf(' ') === -1) && v.indexOf('(') === -1 && v.indexOf(')') === -1
-    );
-  } else {
-    // for url
-    return maps.filter(([v, _]) => v.indexOf(' ') === -1 && v.indexOf('/') === -1);
+function applyEncodeMappings(str: string, mappings: EncodePair[]) {
+  for (let i = 0; i < mappings.length; i++) {
+    str = str.replace(mappings[i].encodeRegex, mappings[i].encoded);
   }
+  return str;
 }
-function encodeMapping(str: string, mapping: string[]) {
-  return str.replace(new RegExp(mapping[0], 'g'), mapping[1]);
-}
-function decodeMapping(str: string, mapping: string[]) {
-  return str.replace(new RegExp(mapping[1], 'g'), mapping[0].replace('\\', ''));
+
+function applyDecodeMappings(str: string, mappings: EncodePair[]) {
+  for (let i = 0; i < mappings.length; i++) {
+    str = str.replace(mappings[i].decodeRegex, mappings[i].raw);
+  }
+  return str;
 }
 export { makeStartTag, makeEndTag, encodeHtml, decodeHtml, encodeLink, ITagKeyValue };
