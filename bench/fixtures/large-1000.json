@@ -1,0 +1,152 @@
+{
+  "note": "Reusable English segment with mixed formatting for benchmark expansion.",
+  "ops": [
+    {
+      "insert": "Benchmark Sample: Quill Delta to HTML Performance"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "header": 2
+      }
+    },
+    {
+      "insert": "This segment is written in plain English and is intentionally reusable. "
+    },
+    {
+      "insert": "The goal",
+      "attributes": {
+        "bold": true
+      }
+    },
+    {
+      "insert": " is to model real writing patterns while keeping fixture maintenance simple. "
+    },
+    {
+      "insert": "Consistent input",
+      "attributes": {
+        "italic": true
+      }
+    },
+    {
+      "insert": " makes regressions easier to detect over time.\n"
+    },
+    {
+      "insert": "We also include inline emphasis such as "
+    },
+    {
+      "insert": "underlined text",
+      "attributes": {
+        "underline": true
+      }
+    },
+    {
+      "insert": ", "
+    },
+    {
+      "insert": "struck text",
+      "attributes": {
+        "strike": true
+      }
+    },
+    {
+      "insert": ", and a "
+    },
+    {
+      "insert": "reference link",
+      "attributes": {
+        "link": "https://example.com/benchmark"
+      }
+    },
+    {
+      "insert": " so conversion code handles common inline styles and anchors correctly.\n"
+    },
+    {
+      "insert": "Key checks for each run:\n"
+    },
+    {
+      "insert": "Stable throughput across repeated executions"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "list": "bullet"
+      }
+    },
+    {
+      "insert": "Predictable p95 and p99 latency"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "list": "bullet"
+      }
+    },
+    {
+      "insert": "No suspicious heap growth after warmup"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "list": "bullet"
+      }
+    },
+    {
+      "insert": "First, run the benchmark locally with a fixed Node version"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "list": "ordered"
+      }
+    },
+    {
+      "insert": "Second, compare results between commits and branches"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "list": "ordered"
+      }
+    },
+    {
+      "insert": "Third, block releases when regressions exceed your threshold"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "list": "ordered"
+      }
+    },
+    {
+      "insert": "A quote for review workflows: measurable performance beats intuition every time."
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "blockquote": true
+      }
+    },
+    {
+      "insert": "const targetChars = Number(process.env.BENCH_TARGET_CHARS || 100000);"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "code-block": true
+      }
+    },
+    {
+      "insert": "const html = converter.convert();"
+    },
+    {
+      "insert": "\n",
+      "attributes": {
+        "code-block": true
+      }
+    },
+    {
+      "insert": "Use this segment as a compact seed, then expand to one hundred thousand characters during the benchmark to reduce repository noise while still exercising long-document code paths.\n"
+    }
+  ]
+}
