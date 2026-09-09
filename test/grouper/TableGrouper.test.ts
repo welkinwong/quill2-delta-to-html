@@ -4,12 +4,7 @@ import * as assert from 'assert';
 import { DeltaInsertOp } from '../../src/DeltaInsertOp';
 import { Grouper } from '../../src/grouper/Grouper';
 import { TableGrouper } from '../../src/grouper/TableGrouper';
-import {
-  TableGroup,
-  TableRow,
-  TableCell,
-  BlockGroup,
-} from '../../src/grouper/group-types';
+import { TableGroup, TableRow, TableCell, BlockGroup } from '../../src/grouper/group-types';
 
 describe('TableGrouper', function () {
   describe('empty table', function () {
@@ -66,12 +61,7 @@ describe('TableGrouper', function () {
       var tableGrouper = new TableGrouper();
       var act = tableGrouper.group(groups);
       var exp = [
-        new TableGroup([
-          new TableRow([
-            new TableCell(<BlockGroup>groups[0]),
-            new TableCell(<BlockGroup>groups[1]),
-          ]),
-        ]),
+        new TableGroup([new TableRow([new TableCell(<BlockGroup>groups[0]), new TableCell(<BlockGroup>groups[1])])]),
       ];
 
       assert.deepEqual(act, exp);

@@ -1,13 +1,7 @@
 import 'mocha';
 import * as assert from 'assert';
 
-import {
-  makeEndTag,
-  makeStartTag,
-  encodeHtml,
-  decodeHtml,
-  encodeLink,
-} from './../src/funcs-html';
+import { makeEndTag, makeStartTag, encodeHtml, decodeHtml, encodeLink } from './../src/funcs-html';
 
 describe('html module', function () {
   describe('makeStartTag()', function () {
@@ -50,16 +44,10 @@ describe('html module', function () {
       var act = encodeHtml('hello"my<lovely\'/>&amp;friend&here()', {
         preventDoubleEncoding: false,
       });
-      assert.equal(
-        act,
-        'hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;amp;friend&amp;here()'
-      );
+      assert.equal(act, 'hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;amp;friend&amp;here()');
 
       var act = encodeHtml('hello"my<lovely\'/>&amp;friend&here()');
-      assert.equal(
-        act,
-        'hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;friend&amp;here()'
-      );
+      assert.equal(act, 'hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;friend&amp;here()');
 
       act = encodeHtml('hello my friend', { encodeSpace: false });
       assert.equal(act, 'hello my friend');
@@ -68,9 +56,7 @@ describe('html module', function () {
 
   describe('decodeHtml()', function () {
     it('should decode html', function () {
-      var act = decodeHtml(
-        'hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;friend&amp;here'
-      );
+      var act = decodeHtml('hello&quot;my&lt;lovely&#x27;&#x2F;&gt;&amp;friend&amp;here');
       assert.equal(act, 'hello"my<lovely\'/>&friend&here');
     });
   });
@@ -78,10 +64,7 @@ describe('html module', function () {
   describe('encodeLink()', function () {
     it('should encode link without encoding spaces', function () {
       var act = encodeLink('http://www.yahoo.com/?a=b&c=<>( )"\'');
-      assert.equal(
-        act,
-        'http://www.yahoo.com/?a=b&amp;c=&lt;&gt;&#40; &#41;&quot;&#x27;'
-      );
+      assert.equal(act, 'http://www.yahoo.com/?a=b&amp;c=&lt;&gt;&#40; &#41;&quot;&#x27;');
     });
   });
 });

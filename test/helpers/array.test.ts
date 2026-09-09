@@ -1,13 +1,7 @@
 import 'mocha';
 import * as assert from 'assert';
 
-import {
-  preferSecond,
-  flatten,
-  groupConsecutiveElementsWhile,
-  intersperse,
-  find,
-} from './../../src/helpers/array';
+import { preferSecond, flatten, groupConsecutiveElementsWhile, intersperse, find } from './../../src/helpers/array';
 
 describe('Array Helpers Module', function () {
   describe('preferSecond()', function () {
@@ -28,10 +22,7 @@ describe('Array Helpers Module', function () {
   describe('groupConsecutiveElementsWhile()', function () {
     it('should move consecutive elements matching predicate into an arr', function () {
       var arr = [1, 'ha', 3, 'ha', 'ha'];
-      var grp = groupConsecutiveElementsWhile(
-        arr,
-        (v, v2) => typeof v === typeof v2
-      );
+      var grp = groupConsecutiveElementsWhile(arr, (v, v2) => typeof v === typeof v2);
       assert.deepEqual(grp, [1, 'ha', 3, ['ha', 'ha']]);
 
       arr = [1, 2, 3, 10, 11, 12];
@@ -53,11 +44,11 @@ describe('Array Helpers Module', function () {
   describe('find()', function () {
     it('should native find sepecific element', function () {
       assert.equal(
-        find([1, 3], (elem) => elem === 3),
+        find([1, 3], elem => elem === 3),
         3
       );
       assert.equal(
-        find([], (elem) => elem === 3),
+        find([], elem => elem === 3),
         null
       );
     });
@@ -66,11 +57,11 @@ describe('Array Helpers Module', function () {
       Object.assign(Array.prototype, { find: undefined });
 
       assert.equal(
-        find([1, 3], (elem) => elem === 3),
+        find([1, 3], elem => elem === 3),
         3
       );
       assert.equal(
-        find([], (elem) => elem === 3),
+        find([], elem => elem === 3),
         null
       );
     });

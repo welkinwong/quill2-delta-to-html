@@ -62,10 +62,7 @@ function decodeHtml(str: string) {
   return applyDecodeMappings(str, HTML_ENCODE_PAIRS_WITH_SPACE);
 }
 
-function encodeHtml(
-  str: string,
-  { preventDoubleEncoding = true, encodeSpace = true }: IEncodeHtmlOptions = {}
-) {
+function encodeHtml(str: string, { preventDoubleEncoding = true, encodeSpace = true }: IEncodeHtmlOptions = {}) {
   if (preventDoubleEncoding) {
     str = decodeHtml(str);
   }

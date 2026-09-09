@@ -66,10 +66,9 @@ describe('InsertOpsConverter', function () {
       assert.equal(objs[objs.length - 1] instanceof DeltaInsertOp, true);
       assert.deepEqual(InsertOpsConverter.convert(null, {}), []);
       assert.deepEqual(InsertOpsConverter.convert([{ insert: '' }], {}), []);
-      assert.deepEqual(
-        InsertOpsConverter.convert([{ insert: { cake: '' } }], {}),
-        [{ insert: { type: 'cake', value: '' }, attributes: {} }]
-      );
+      assert.deepEqual(InsertOpsConverter.convert([{ insert: { cake: '' } }], {}), [
+        { insert: { type: 'cake', value: '' }, attributes: {} },
+      ]);
       assert.deepEqual(InsertOpsConverter.convert([{ insert: 2 }], {}), []);
       //console.log(objs);
     });
@@ -77,12 +76,12 @@ describe('InsertOpsConverter', function () {
 
   describe('#convertInsertVal()', function () {
     it('should convert raw .insert value to valid TInsert or null', function () {
-      [null, undefined, 3, {}].forEach((v) => {
+      [null, undefined, 3, {}].forEach(v => {
         var act = InsertOpsConverter.convertInsertVal(v, {});
         assert.equal(act, null);
       });
 
-      ['fdsf', { image: 'ff' }, { video: '' }, { formula: '' }].forEach((v) => {
+      ['fdsf', { image: 'ff' }, { video: '' }, { formula: '' }].forEach(v => {
         var act = InsertOpsConverter.convertInsertVal(v, {});
         assert.notEqual(act, null);
         assert.ok(act instanceof InsertDataQuill);

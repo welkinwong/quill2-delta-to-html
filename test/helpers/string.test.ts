@@ -28,15 +28,7 @@ describe('String Extensions Module', function () {
       assert.deepEqual(tokenizeWithNewLines(act), [' ', '\n', 'abc', '\n']);
 
       act = '\n\nabc\n\n6\n';
-      assert.deepEqual(tokenizeWithNewLines(act), [
-        '\n',
-        '\n',
-        'abc',
-        '\n',
-        '\n',
-        '6',
-        '\n',
-      ]);
+      assert.deepEqual(tokenizeWithNewLines(act), ['\n', '\n', 'abc', '\n', '\n', '6', '\n']);
     });
   });
 });

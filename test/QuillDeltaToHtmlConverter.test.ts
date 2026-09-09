@@ -868,7 +868,9 @@ describe('QuillDeltaToHtmlConverter', function () {
         html = qdc.convert();
         assert.equal(
           html,
-          '<pre>line 1<br/>line 2<br/>line 3<br/>' + encodeHtml('<p>line 4</p>', { encodeSpace: false }) + '<br/>line 5</pre>'
+          '<pre>line 1<br/>line 2<br/>line 3<br/>' +
+            encodeHtml('<p>line 4</p>', { encodeSpace: false }) +
+            '<br/>line 5</pre>'
         );
       });
 
