@@ -205,19 +205,27 @@ class QuillDeltaToHtmlConverter {
     );
   }
 
+  /**
+   * Encode one code-block line. Grouper fills empty lines with NewLine; that is a
+   * placeholder, not content. Strip it so Quill-format HTML can use <br/> and
+   * simpleCodeBlock does not emit both "\n" and <br/>.
+   */
+  _encodeCodeBlockLineHtml(raw: string): string {
+    return encodeHtml(raw.replace(/\r?\n/g, ''), {
+      encodeSpace: this.options.encodeSpace !== false,
+    });
+  }
+
   _renderCodeBlockItem(codeBlock: CodeBlockItem, isLast: boolean): string {
     var converter = this._getReusableConverter(codeBlock.item.op);
     var parts = converter.getHtmlParts();
-
-    var codeBlockElementsHtml = encodeHtml(codeBlock.item.ops.map(iop => iop.insert.value).join(''), {
-      encodeSpace: this.options.encodeSpace !== false,
-    });
+    var lineHtml = this._encodeCodeBlockLineHtml(codeBlock.item.ops.map(iop => iop.insert.value).join(''));
 
     if (this.options.simpleCodeBlock) {
-      return codeBlockElementsHtml + (isLast ? '' : BrTag);
-    } else {
-      return parts.openingTags.join('') + codeBlockElementsHtml + parts.closingTags.join('');
+      return lineHtml + (isLast ? '' : BrTag);
     }
+
+    return parts.openingTags.join('') + (lineHtml || BrTag) + parts.closingTags.join('');
   }
 
   _renderList(list: ListGroup): string {
@@ -274,13 +282,10 @@ class QuillDeltaToHtmlConverter {
     var htmlParts = converter.getHtmlParts();
 
     if (bop.isCodeBlock()) {
-      return (
-        htmlParts.openingTags.join('') +
-        encodeHtml(ops.map(iop => (iop.isCustomEmbed() ? this._renderCustom(iop, bop) : iop.insert.value)).join(''), {
-          encodeSpace: this.options.encodeSpace !== false,
-        }) +
-        htmlParts.closingTags.join('')
+      var lineHtml = this._encodeCodeBlockLineHtml(
+        ops.map(iop => (iop.isCustomEmbed() ? this._renderCustom(iop, bop) : iop.insert.value)).join('')
       );
+      return htmlParts.openingTags.join('') + (lineHtml || BrTag) + htmlParts.closingTags.join('');
     }
 
     var inlines = this._renderInlines(ops, false);

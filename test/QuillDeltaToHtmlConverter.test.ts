@@ -73,6 +73,66 @@ describe('QuillDeltaToHtmlConverter', function () {
       assert.equal(html.indexOf('class="ql-code-block"') > -1, true, html);
     });
 
+    it('should render empty Quill code-block lines as br (not a literal newline)', function () {
+      var ops = [
+        { insert: 'line 1' },
+        { insert: '\n', attributes: { 'code-block': true } },
+        { insert: '\n', attributes: { 'code-block': true } },
+        { insert: 'line 2' },
+        { insert: '\n', attributes: { 'code-block': true } },
+      ];
+      var qdc = new QuillDeltaToHtmlConverter(ops);
+      assert.equal(
+        qdc.convert(),
+        '<div class="ql-code-block-container">' +
+          '<div class="ql-code-block">line&nbsp;1</div>' +
+          '<div class="ql-code-block"><br/></div>' +
+          '<div class="ql-code-block">line&nbsp;2</div>' +
+          '</div>'
+      );
+    });
+
+    it('should treat merged \\\\n\\\\n code-block ops as an empty Quill code line with br', function () {
+      var ops = [
+        { insert: 'line 1' },
+        { insert: '\n\n', attributes: { 'code-block': true } },
+        { insert: 'line 2' },
+        { insert: '\n', attributes: { 'code-block': true } },
+      ];
+      var qdc = new QuillDeltaToHtmlConverter(ops);
+      assert.equal(
+        qdc.convert(),
+        '<div class="ql-code-block-container">' +
+          '<div class="ql-code-block">line&nbsp;1</div>' +
+          '<div class="ql-code-block"><br/></div>' +
+          '<div class="ql-code-block">line&nbsp;2</div>' +
+          '</div>'
+      );
+    });
+
+    it('should keep space-only Quill code-block lines (not treat them as empty)', function () {
+      var ops = [{ insert: '   ' }, { insert: '\n', attributes: { 'code-block': true } }];
+      var qdc = new QuillDeltaToHtmlConverter(ops);
+      assert.equal(
+        qdc.convert(),
+        '<div class="ql-code-block-container"><div class="ql-code-block">&nbsp;&nbsp;&nbsp;</div></div>'
+      );
+    });
+
+    it('should not emit both newline and br for empty lines in simpleCodeBlock', function () {
+      var ops = [
+        { insert: 'line 1' },
+        { insert: '\n', attributes: { 'code-block': true } },
+        { insert: '\n', attributes: { 'code-block': true } },
+        { insert: 'line 2' },
+        { insert: '\n', attributes: { 'code-block': true } },
+      ];
+      var qdc = new QuillDeltaToHtmlConverter(ops, { simpleCodeBlock: true });
+      var html = qdc.convert();
+      assert.equal(html, '<pre>line&nbsp;1<br/><br/>line&nbsp;2</pre>');
+      assert.equal(html.indexOf('\n') === -1, true, html);
+    });
+
     it('should render each \\n as block boundary (e.g. {"insert": "\\n\\n"} as two empty paragraphs)', function () {
       var qdc = new QuillDeltaToHtmlConverter([{ insert: '\n\n' }], { paragraphTag: 'p' });
       var html = qdc.convert();
@@ -810,6 +870,13 @@ describe('QuillDeltaToHtmlConverter', function () {
           html,
           '<pre>line 1<br/>line 2<br/>line 3<br/>' + encodeHtml('<p>line 4</p>', { encodeSpace: false }) + '<br/>line 5</pre>'
         );
+      });
+
+      it('should render newline-only code-block ops as br', function () {
+        var op = new DeltaInsertOp('\n', { 'code-block': true });
+        var qdc = new QuillDeltaToHtmlConverter([]);
+        assert.equal(qdc._renderBlock(op, [DeltaInsertOp.createNewLineOp()]), '<div class="ql-code-block"><br/></div>');
+        assert.equal(qdc._renderBlock(op, []), '<div class="ql-code-block"><br/></div>');
       });
     });
 
